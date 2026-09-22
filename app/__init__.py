@@ -43,9 +43,9 @@ def create_app(config_name=None) -> Flask:
         return {
             'now': datetime.utcnow(),
             'current_year': datetime.utcnow().year,
-            'college_name': app.config.get('COLLEGE_NAME', 'Apex Institute of Technology'),
-            'college_code': app.config.get('COLLEGE_CODE', 'AITE'),
-            'college_email': app.config.get('COLLEGE_EMAIL', 'support@college.edu'),
+            'college_name': app.config.get('COLLEGE_NAME', 'Pillai School of Engineering'),
+            'college_code': app.config.get('COLLEGE_CODE', 'PSE'),
+            'college_email': app.config.get('COLLEGE_EMAIL', 'support@pillai.edu'),
             'is_mock_payment_mode': Config.is_mock_payment_mode(),
             'razorpay_key_id': app.config.get('RAZORPAY_KEY_ID', '')
         }

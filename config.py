@@ -12,9 +12,9 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'default-college-portal-super-secret-key-2026')
     
     # College Metadata
-    COLLEGE_NAME = os.environ.get('COLLEGE_NAME', 'Apex Institute of Technology & Engineering')
-    COLLEGE_CODE = os.environ.get('COLLEGE_CODE', 'AITE')
-    COLLEGE_EMAIL = os.environ.get('COLLEGE_EMAIL', 'support@college.edu')
+    COLLEGE_NAME = os.environ.get('COLLEGE_NAME', 'Pillai School of Engineering')
+    COLLEGE_CODE = os.environ.get('COLLEGE_CODE', 'PSE')
+    COLLEGE_EMAIL = os.environ.get('COLLEGE_EMAIL', 'support@pillai.edu')
     
     # SQLAlchemy configuration
     # Default to instance/portal.db in absolute path

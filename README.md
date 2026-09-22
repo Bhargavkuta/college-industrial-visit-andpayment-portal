@@ -1,6 +1,6 @@
-# College Industrial Visit Registration & Payment Portal
+# Pillai School of Engineering — Industrial Visit Registration & Payment Portal
 
-A production-quality full-stack web application designed for engineering and technical colleges to streamline industrial visit discovery, student registration, eligibility verification, online payment processing, and administrative reporting.
+A production-quality full-stack web application designed for Pillai School of Engineering to streamline industrial visit discovery, student registration, eligibility verification, online payment processing, and administrative reporting.
 
 ---
 

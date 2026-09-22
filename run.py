@@ -43,7 +43,7 @@ if __name__ == '__main__':
             seed_database()
 
     print("=======================================================================")
-    print(" College Industrial Visit Registration & Payment Portal")
+    print(" Pillai School of Engineering — Industrial Visit Portal")
     print(" Server running at: http://127.0.0.1:5000")
     print(" Default Admin: admin@college.edu | Password: Admin@123")
     print(" Default Student: student@college.edu | Password: Student@123")
