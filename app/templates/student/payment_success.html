@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Registration Confirmed!{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-md rounded-4 p-4 p-md-5 bg-white text-center">
+        <!-- Success Check Icon -->
+        <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow" style="width: 72px; height: 72px;">
+          <i class="bi bi-check-lg fs-1"></i>
+        </div>
+
+        <h2 class="fw-bold text-success mb-1">Registration Confirmed!</h2>
+        <p class="text-muted small mb-4">Your seat for the industrial tour has been officially confirmed.</p>
+
+        <!-- Summary Details Card -->
+        <div class="p-4 bg-light rounded-4 text-start mb-4 border">
+          <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+            <span class="text-muted small">Unique Registration ID</span>
+            <span class="fw-bold text-primary font-monospace fs-5" id="confirmed-reg-id">{{ registration.registration_id }}</span>
+          </div>
+
+          <div class="row g-3 small">
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Student Name</span>
+              <strong class="text-dark">{{ registration.student.full_name }}</strong>
+            </div>
+
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Roll Number / PRN</span>
+              <strong class="text-dark">{{ registration.student.roll_number }}</strong>
+            </div>
+
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Company</span>
+              <strong class="text-dark">{{ registration.visit.company_name }}</strong>
+            </div>
+
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Visit Title</span>
+              <strong class="text-dark">{{ registration.visit.title }}</strong>
+            </div>
+
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Visit Date</span>
+              <strong class="text-dark">{{ registration.visit.visit_date|format_date }} ({{ registration.visit.start_time|format_time }})</strong>
+            </div>
+
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Boarding Point</span>
+              <strong class="text-dark">{{ registration.visit.meeting_point }}</strong>
+            </div>
+
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Amount Paid</span>
+              <strong class="text-success fs-6">
+                {% if payment %}{{ payment.formatted_amount }}{% else %}₹0.00{% endif %}
+              </strong>
+            </div>
+
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Payment ID / Ref</span>
+              <strong class="text-dark font-monospace">
+                {% if payment and payment.razorpay_payment_id %}{{ payment.razorpay_payment_id }}{% else %}N/A{% endif %}
+              </strong>
+            </div>
+
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Payment Status</span>
+              <span class="badge bg-success text-white">SUCCESSFUL</span>
+            </div>
+
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Registration Status</span>
+              <span class="badge bg-success text-white">CONFIRMED</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+          <a href="{{ url_for('student.receipt', reg_id=registration.id) }}" class="btn btn-navy px-4 py-2 fw-bold" id="btn-print-receipt">
+            <i class="bi bi-printer me-2"></i> Print Official Receipt
+          </a>
+          <a href="{{ url_for('student.registration_detail', reg_id=registration.id) }}" class="btn btn-outline-primary px-4 py-2 fw-bold" id="btn-view-reg-detail">
+            <i class="bi bi-ticket-perforated me-2"></i> View Registration
+          </a>
+          <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary px-4 py-2" id="btn-back-dash">
+            <i class="bi bi-house me-1"></i> Back to Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

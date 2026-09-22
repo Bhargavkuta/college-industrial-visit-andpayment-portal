@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+      <div class="bg-navy text-white rounded-circle p-2 d-flex align-items-center justify-content-center bg-primary" style="width: 44px; height: 44px;">
+        <i class="bi bi-shield-lock-fill fs-5"></i>
+      </div>
+      <div>
+        <h6 class="mb-0 fw-bold">Admin Console</h6>
+        <small class="text-muted">{{ college_code }} IARC Cell</small>
+      </div>
+    </div>
+
+    <div class="sidebar-heading">Core Management</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.visits') }}" class="sidebar-link active">
+          <i class="bi bi-calendar4-event"></i>
+          <span>Industrial Visits</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.registrations') }}" class="sidebar-link">
+          <i class="bi bi-card-checklist"></i>
+          <span>Registrations</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.students') }}" class="sidebar-link">
+          <i class="bi bi-people"></i>
+          <span>Enrolled Students</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.payments') }}" class="sidebar-link">
+          <i class="bi bi-credit-card"></i>
+          <span>Payments Ledger</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.reports') }}" class="sidebar-link">
+          <i class="bi bi-bar-chart-line"></i>
+          <span>Reports & Analytics</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-heading mt-4">System Actions</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('main.index') }}" class="sidebar-link" target="_blank">
+          <i class="bi bi-box-arrow-up-right"></i>
+          <span>View Public Site</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('auth.logout') }}" class="sidebar-link text-danger">
+          <i class="bi bi-box-arrow-right text-danger"></i>
+          <span>Sign Out</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.visits') }}">Industrial Visits</a></li>
+            <li class="breadcrumb-item active">{{ title }}</li>
+          </ol>
+        </nav>
+        <h2 class="dashboard-title">{{ title }}</h2>
+        <p class="dashboard-subtitle">Configure tour themes, corporate partners, schedule breakdown, and eligibility.</p>
+      </div>
+      <a href="{{ url_for('admin.visits') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to Visits
+      </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+      <form method="POST" novalidate id="visit-editor-form">
+        {{ form.hidden_tag() }}
+
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-building me-2"></i>1. Company & Visit Overview</h5>
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label for="company_name" class="form-label fw-semibold small">Company / Organization Name <span class="text-danger">*</span></label>
+            {{ form.company_name(class="form-control" + (" is-invalid" if form.company_name.errors else ""), placeholder="e.g. Tata Motors Ltd.", id="company_name") }}
+            {% if form.company_name.errors %}
+              <div class="text-danger small mt-1">{% for error in form.company_name.errors %}{{ error }}{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label for="title" class="form-label fw-semibold small">Visit Theme / Title <span class="text-danger">*</span></label>
+            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="e.g. Automated EV Assembly Line & Robotics Plant Tour", id="title") }}
+            {% if form.title.errors %}
+              <div class="text-danger small mt-1">{% for error in form.title.errors %}{{ error }}{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label for="company_logo" class="form-label fw-semibold small">Company Logo URL</label>
+            {{ form.company_logo(class="form-control", placeholder="https://example.com/logo.png", id="company_logo") }}
+          </div>
+
+          <div class="col-md-6">
+            <label for="cover_image" class="form-label fw-semibold small">Cover Banner Image URL</label>
+            {{ form.cover_image(class="form-control", placeholder="https://example.com/plant-banner.jpg", id="cover_image") }}
+          </div>
+
+          <div class="col-md-12">
+            <label for="description" class="form-label fw-semibold small">Detailed Description & Objectives <span class="text-danger">*</span></label>
+            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows="4", placeholder="Explain the technical areas students will explore, plant facilities, and learning takeaways...", id="description") }}
+            {% if form.description.errors %}
+              <div class="text-danger small mt-1">{% for error in form.description.errors %}{{ error }}{% endfor %}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-calendar-event me-2"></i>2. Schedule, Timings & Logistics</h5>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label for="visit_date" class="form-label fw-semibold small">Date of Visit <span class="text-danger">*</span></label>
+            {{ form.visit_date(class="form-control" + (" is-invalid" if form.visit_date.errors else ""), type="date", id="visit_date") }}
+            {% if form.visit_date.errors %}
+              <div class="text-danger small mt-1">{% for error in form.visit_date.errors %}{{ error }}{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-4">
+            <label for="start_time" class="form-label fw-semibold small">Assembly / Start Time <span class="text-danger">*</span></label>
+            {{ form.start_time(class="form-control" + (" is-invalid" if form.start_time.errors else ""), type="time", id="start_time") }}
+            {% if form.start_time.errors %}
+              <div class="text-danger small mt-1">{% for error in form.start_time.errors %}{{ error }}{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-4">
+            <label for="end_time" class="form-label fw-semibold small">Return / End Time <span class="text-danger">*</span></label>
+            {{ form.end_time(class="form-control" + (" is-invalid" if form.end_time.errors else ""), type="time", id="end_time") }}
+            {% if form.end_time.errors %}
+              <div class="text-danger small mt-1">{% for error in form.end_time.errors %}{{ error }}{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label for="location" class="form-label fw-semibold small">Plant / Facility Address <span class="text-danger">*</span></label>
+            {{ form.location(class="form-control" + (" is-invalid" if form.location.errors else ""), placeholder="e.g. Tata Motors Plant, Pimpri, Pune", id="location") }}
+            {% if form.location.errors %}
+              <div class="text-danger small mt-1">{% for error in form.location.errors %}{{ error }}{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label for="meeting_point" class="form-label fw-semibold small">Campus Assembly Point <span class="text-danger">*</span></label>
+            {{ form.meeting_point(class="form-control" + (" is-invalid" if form.meeting_point.errors else ""), placeholder="e.g. College Main Gate No. 1", id="meeting_point") }}
+            {% if form.meeting_point.errors %}
+              <div class="text-danger small mt-1">{% for error in form.meeting_point.errors %}{{ error }}{% endfor %}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-people me-2"></i>3. Capacity, Fee & Deadlines</h5>
+        <div class="row g-3 mb-4">
+          <div class="col-md-3">
+            <label for="capacity" class="form-label fw-semibold small">Seat Capacity <span class="text-danger">*</span></label>
+            {{ form.capacity(class="form-control" + (" is-invalid" if form.capacity.errors else ""), placeholder="50", id="capacity") }}
+            {% if form.capacity.errors %}
+              <div class="text-danger small mt-1">{% for error in form.capacity.errors %}{{ error }}{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-3">
+            <label for="fee" class="form-label fw-semibold small">Registration Fee (₹) <span class="text-danger">*</span></label>
+            {{ form.fee(class="form-control" + (" is-invalid" if form.fee.errors else ""), placeholder="650.00", id="fee") }}
+            {% if form.fee.errors %}
+              <div class="text-danger small mt-1">{% for error in form.fee.errors %}{{ error }}{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-3">
+            <label for="registration_deadline_date" class="form-label fw-semibold small">Deadline Date <span class="text-danger">*</span></label>
+            {{ form.registration_deadline_date(class="form-control" + (" is-invalid" if form.registration_deadline_date.errors else ""), type="date", id="registration_deadline_date") }}
+            {% if form.registration_deadline_date.errors %}
+              <div class="text-danger small mt-1">{% for error in form.registration_deadline_date.errors %}{{ error }}{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-3">
+            <label for="registration_deadline_time" class="form-label fw-semibold small">Deadline Time <span class="text-danger">*</span></label>
+            {{ form.registration_deadline_time(class="form-control", type="time", id="registration_deadline_time") }}
+          </div>
+
+          <div class="col-md-6">
+            <label for="eligibility_departments" class="form-label fw-semibold small">Eligible Departments (Comma-separated or 'All') <span class="text-danger">*</span></label>
+            {{ form.eligibility_departments(class="form-control", placeholder="e.g. Mechanical Engineering, Computer Engineering or All", id="eligibility_departments") }}
+          </div>
+
+          <div class="col-md-6">
+            <label for="eligibility_years" class="form-label fw-semibold small">Eligible Academic Years (Comma-separated or 'All') <span class="text-danger">*</span></label>
+            {{ form.eligibility_years(class="form-control", placeholder="e.g. Third Year, Final Year or All", id="eligibility_years") }}
+          </div>
+        </div>
+
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-card-list me-2"></i>4. Itinerary & Safety Instructions</h5>
+        <div class="row g-3 mb-4">
+          <div class="col-md-12">
+            <label for="schedule_json" class="form-label fw-semibold small">Itinerary Timeline (JSON format)</label>
+            {{ form.schedule_json(class="form-control font-monospace small", rows="5", placeholder='[{"time": "08:00 AM", "activity": "Assembly", "description": "Boarding buses"}]', id="schedule_json") }}
+            <div class="form-text small">Enter JSON array of objects with "time", "activity", and "description" keys.</div>
+          </div>
+
+          <div class="col-md-12">
+            <label for="important_instructions" class="form-label fw-semibold small">Safety Norms & Instructions</label>
+            {{ form.important_instructions(class="form-control", rows="3", placeholder="e.g. Safety shoes mandatory, college ID required...", id="important_instructions") }}
+          </div>
+
+          <div class="col-md-6">
+            <label for="status" class="form-label fw-semibold small">Publication Status <span class="text-danger">*</span></label>
+            {{ form.status(class="form-select", id="status") }}
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+          <a href="{{ url_for('admin.visits') }}" class="btn btn-outline-secondary">
+            Cancel
+          </a>
+          <button type="submit" class="btn btn-primary px-4 py-2 fw-bold" id="btn-save-visit">
+            <i class="bi bi-cloud-arrow-up me-1"></i> Save Industrial Visit
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

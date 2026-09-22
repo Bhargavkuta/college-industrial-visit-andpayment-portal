@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Enrolled Students Directory{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+      <div class="bg-navy text-white rounded-circle p-2 d-flex align-items-center justify-content-center bg-primary" style="width: 44px; height: 44px;">
+        <i class="bi bi-shield-lock-fill fs-5"></i>
+      </div>
+      <div>
+        <h6 class="mb-0 fw-bold">Admin Console</h6>
+        <small class="text-muted">{{ college_code }} IARC Cell</small>
+      </div>
+    </div>
+
+    <div class="sidebar-heading">Core Management</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.visits') }}" class="sidebar-link">
+          <i class="bi bi-calendar4-event"></i>
+          <span>Industrial Visits</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.registrations') }}" class="sidebar-link">
+          <i class="bi bi-card-checklist"></i>
+          <span>Registrations</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.students') }}" class="sidebar-link active">
+          <i class="bi bi-people"></i>
+          <span>Enrolled Students</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.payments') }}" class="sidebar-link">
+          <i class="bi bi-credit-card"></i>
+          <span>Payments Ledger</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.reports') }}" class="sidebar-link">
+          <i class="bi bi-bar-chart-line"></i>
+          <span>Reports & Analytics</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-heading mt-4">System Actions</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('main.index') }}" class="sidebar-link" target="_blank">
+          <i class="bi bi-box-arrow-up-right"></i>
+          <span>View Public Site</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('auth.logout') }}" class="sidebar-link text-danger">
+          <i class="bi bi-box-arrow-right text-danger"></i>
+          <span>Sign Out</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <h2 class="dashboard-title">Enrolled Students Directory</h2>
+        <p class="dashboard-subtitle">Manage registered college students, check branch distribution, and control account status.</p>
+      </div>
+      <div class="badge bg-primary fs-6 px-3 py-2">
+        {{ students|length }} Active Student{% if students|length != 1 %}s{% endif %}
+      </div>
+    </div>
+
+    <!-- Filters Form -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-4 bg-white">
+      <form method="GET" action="{{ url_for('admin.students') }}">
+        <div class="row g-3">
+          <div class="col-lg-5 col-md-6">
+            <label class="form-label small fw-bold text-muted">Search Student</label>
+            <input type="text" name="search" class="form-control" placeholder="Name, roll number, email, phone..." value="{{ search }}">
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label small fw-bold text-muted">Department</label>
+            <select name="department" class="form-select">
+              <option value="All">All Departments</option>
+              <option value="Computer Engineering" {% if selected_dept == 'Computer Engineering' %}selected{% endif %}>Computer</option>
+              <option value="Information Technology" {% if selected_dept == 'Information Technology' %}selected{% endif %}>IT</option>
+              <option value="Mechanical Engineering" {% if selected_dept == 'Mechanical Engineering' %}selected{% endif %}>Mechanical</option>
+              <option value="Civil Engineering" {% if selected_dept == 'Civil Engineering' %}selected{% endif %}>Civil</option>
+              <option value="Electrical Engineering" {% if selected_dept == 'Electrical Engineering' %}selected{% endif %}>Electrical</option>
+            </select>
+          </div>
+
+          <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-bold text-muted">Academic Year</label>
+            <select name="year" class="form-select">
+              <option value="All">All Years</option>
+              <option value="First Year" {% if selected_year == 'First Year' %}selected{% endif %}>First Year</option>
+              <option value="Second Year" {% if selected_year == 'Second Year' %}selected{% endif %}>Second Year</option>
+              <option value="Third Year" {% if selected_year == 'Third Year' %}selected{% endif %}>Third Year</option>
+              <option value="Final Year" {% if selected_year == 'Final Year' %}selected{% endif %}>Final Year</option>
+            </select>
+          </div>
+
+          <div class="col-lg-2 col-md-6 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-primary flex-grow-1">Filter</button>
+            <a href="{{ url_for('admin.students') }}" class="btn btn-outline-secondary" title="Reset"><i class="bi bi-arrow-counterclockwise"></i></a>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Students Table -->
+    <div class="card-table-wrapper">
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Roll Number</th>
+              <th>Student Name</th>
+              <th>Department</th>
+              <th>Year & Div</th>
+              <th>Email & Phone</th>
+              <th>Visits Registered</th>
+              <th>Account Status</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if students %}
+              {% for s in students %}
+                <tr>
+                  <td><span class="font-monospace fw-bold text-dark">{{ s.roll_number }}</span></td>
+                  <td><div class="fw-bold text-dark">{{ s.full_name }}</div></td>
+                  <td>{{ s.department }}</td>
+                  <td>{{ s.year }} (Div {{ s.division }})</td>
+                  <td>
+                    <div>{{ s.email }}</div>
+                    <small class="text-muted">{{ s.phone }}</small>
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-primary border fw-bold px-2 py-1">
+                      {{ s.registrations.count() }} Visit{% if s.registrations.count() != 1 %}s{% endif %}
+                    </span>
+                  </td>
+                  <td>
+                    {% if s.is_active %}
+                      <span class="badge bg-success">ACTIVE</span>
+                    {% else %}
+                      <span class="badge bg-danger">DEACTIVATED</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <a href="{{ url_for('admin.toggle_student_status', student_id=s.id) }}" class="btn btn-outline-secondary btn-sm" title="Toggle Active Status">
+                      {% if s.is_active %}
+                        <i class="bi bi-pause-circle text-danger"></i> Deactivate
+                      {% else %}
+                        <i class="bi bi-play-circle text-success"></i> Activate
+                      {% endif %}
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="8" class="text-center py-5 text-muted">No student records found.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

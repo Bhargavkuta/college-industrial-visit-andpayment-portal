@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}My Registrations{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+      <div class="bg-primary text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+        <i class="bi bi-person-fill fs-5"></i>
+      </div>
+      <div>
+        <h6 class="mb-0 fw-bold">{{ current_user.full_name }}</h6>
+        <small class="text-muted">{{ current_user.roll_number }}</small>
+      </div>
+    </div>
+
+    <div class="sidebar-heading">Navigation</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('student.dashboard') }}" class="sidebar-link">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('main.visits') }}" class="sidebar-link">
+          <i class="bi bi-compass"></i>
+          <span>Explore Visits</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('student.registrations') }}" class="sidebar-link active">
+          <i class="bi bi-ticket-perforated"></i>
+          <span>My Registrations</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('student.profile') }}" class="sidebar-link">
+          <i class="bi bi-person-gear"></i>
+          <span>Profile & Settings</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-heading mt-4">Account</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('auth.logout') }}" class="sidebar-link text-danger">
+          <i class="bi bi-box-arrow-right text-danger"></i>
+          <span>Sign Out</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <h2 class="dashboard-title">My Industrial Visit Registrations</h2>
+        <p class="dashboard-subtitle">Track your booking status, download printable receipts, and review schedules.</p>
+      </div>
+      <a href="{{ url_for('main.visits') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i> Register for New Visit
+      </a>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-pills mb-4">
+      <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'all' %}active{% endif %}" href="{{ url_for('student.registrations', tab='all') }}" id="tab-all">All Registrations</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'upcoming' %}active{% endif %}" href="{{ url_for('student.registrations', tab='upcoming') }}" id="tab-upcoming">Upcoming Tours</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'completed' %}active{% endif %}" href="{{ url_for('student.registrations', tab='completed') }}" id="tab-completed">Completed Visits</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if active_tab == 'cancelled' %}active{% endif %}" href="{{ url_for('student.registrations', tab='cancelled') }}" id="tab-cancelled">Cancelled</a>
+      </li>
+    </ul>
+
+    <!-- Registrations Table -->
+    <div class="card-table-wrapper">
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Registration ID</th>
+              <th>Company & Visit Title</th>
+              <th>Visit Date & Time</th>
+              <th>Location</th>
+              <th>Payment</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if registrations %}
+              {% for reg in registrations %}
+                <tr>
+                  <td>
+                    <span class="fw-bold font-monospace text-dark">{{ reg.registration_id }}</span>
+                    <small class="text-muted d-block">{{ reg.registered_at|format_date }}</small>
+                  </td>
+                  <td>
+                    <div class="fw-bold text-dark">{{ reg.visit.company_name }}</div>
+                    <small class="text-muted">{{ reg.visit.title }}</small>
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-dark">{{ reg.visit.visit_date|format_date }}</div>
+                    <small class="text-muted">{{ reg.visit.start_time|format_time }}</small>
+                  </td>
+                  <td>
+                    <small class="text-muted">{{ reg.visit.location[:30] }}...</small>
+                  </td>
+                  <td>
+                    {% if reg.latest_payment %}
+                      <span class="badge {{ reg.latest_payment.status_badge_class }}">
+                        {{ reg.latest_payment.status|upper }} ({{ reg.latest_payment.formatted_amount }})
+                      </span>
+                    {% else %}
+                      <span class="badge bg-secondary">UNPAID</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge {{ reg.status_badge_class }}">{{ reg.status|upper }}</span>
+                  </td>
+                  <td class="text-end">
+                    <div class="btn-group btn-group-sm">
+                      <a href="{{ url_for('student.registration_detail', reg_id=reg.id) }}" class="btn btn-outline-primary" title="View Details">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      {% if reg.status == 'confirmed' %}
+                        <a href="{{ url_for('student.receipt', reg_id=reg.id) }}" class="btn btn-outline-secondary" title="Print Official Receipt">
+                          <i class="bi bi-printer"></i>
+                        </a>
+                        {% set can_cancel, _ = reg.can_be_cancelled() %}
+                        {% if can_cancel %}
+                          <a href="{{ url_for('student.cancel_registration', reg_id=reg.id) }}" class="btn btn-outline-danger" title="Cancel Booking">
+                            <i class="bi bi-x-circle"></i>
+                          </a>
+                        {% endif %}
+                      {% elif reg.status == 'pending' %}
+                        <a href="{{ url_for('payment.checkout', registration_id=reg.id) }}" class="btn btn-primary" title="Complete Payment">
+                          Pay Now
+                        </a>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="7" class="text-center py-5">
+                  <div class="empty-state border-0 py-3">
+                    <i class="bi bi-ticket-perforated empty-state-icon"></i>
+                    <h5>No Registrations Found in This Tab</h5>
+                    <p class="text-muted small">Explore scheduled industrial visits and register your seat.</p>
+                    <a href="{{ url_for('main.visits') }}" class="btn btn-primary btn-sm">Explore Visits</a>
+                  </div>
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

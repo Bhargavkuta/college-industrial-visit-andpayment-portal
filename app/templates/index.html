@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block title %}Turn Classroom Learning Into Real-World Experience{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container position-relative">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-7">
+        <div class="hero-badge">
+          <i class="bi bi-patch-check-fill text-primary"></i>
+          <span>Official Industry-Academia Portal</span>
+        </div>
+        <h1 class="hero-title">
+          Turn Classroom Learning Into <span>Real-World</span> Experience
+        </h1>
+        <p class="hero-subtitle">
+          Discover, register and participate in accredited industrial visits organized by {{ college_name }}. Experience state-of-the-art manufacturing plants, cloud data centers, and advanced R&D labs.
+        </p>
+        <div class="d-flex flex-wrap gap-3 mt-4">
+          <a href="{{ url_for('main.visits') }}" class="btn btn-primary btn-lg px-4" id="hero-btn-explore">
+            <i class="bi bi-compass me-2"></i>Explore Visits
+          </a>
+          <a href="#how-it-works" class="btn btn-outline-light btn-lg px-4" id="hero-btn-how">
+            <i class="bi bi-play-circle me-2"></i>How It Works
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-5 d-none d-lg-block">
+        <div class="position-relative">
+          <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=80" alt="Students in Industrial Plant" class="img-fluid rounded-4 shadow-lg border border-2 border-white">
+          <div class="position-absolute bottom-0 start-0 translate-middle-y bg-white text-dark p-3 rounded-3 shadow-lg ms-3" style="max-width: 260px;">
+            <div class="d-flex align-items-center gap-3">
+              <div class="bg-success text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                <i class="bi bi-check-lg fs-5"></i>
+              </div>
+              <div>
+                <h6 class="mb-0 fw-bold">Verified Tours</h6>
+                <small class="text-muted">100% Safety Certified</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Live Statistics Bar -->
+<section class="py-5 bg-white border-bottom">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-number">{{ stats.total_visits }}</div>
+          <div class="stat-label">Visits Organized</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-number">{{ stats.total_students }}</div>
+          <div class="stat-label">Active Students</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-number">{{ stats.total_registrations }}</div>
+          <div class="stat-label">Registrations Done</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-number">{{ stats.total_partner_companies }}+</div>
+          <div class="stat-label">Partner Industries</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Featured / Upcoming Visits Section -->
+<section class="py-5">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
+      <div>
+        <span class="text-primary fw-bold text-uppercase small tracking-wide">Handpicked Opportunities</span>
+        <h2 class="fw-bold mb-0">Upcoming Featured Industrial Visits</h2>
+      </div>
+      <a href="{{ url_for('main.visits') }}" class="btn btn-outline-primary" id="btn-view-all-visits">
+        View All Visits <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+
+    <div class="row g-4">
+      {% if featured_visits %}
+        {% for visit in featured_visits %}
+          <div class="col-lg-4 col-md-6">
+            <div class="visit-card">
+              <div class="visit-card-img-wrapper">
+                <img src="{{ visit.cover_image or 'https://images.unsplash.com/photo-1565043589221-1a6fd9ae45c7?w=600&auto=format&fit=crop&q=80' }}" alt="{{ visit.title }}" class="visit-card-img">
+                <span class="visit-card-badge {{ visit.status_badge_class }}">
+                  {{ visit.dynamic_status }}
+                </span>
+                <img src="{{ visit.company_logo or 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=100&auto=format&fit=crop&q=80' }}" alt="{{ visit.company_name }}" class="visit-card-company-logo">
+              </div>
+
+              <div class="visit-card-body">
+                <div class="visit-card-company">{{ visit.company_name }}</div>
+                <h5 class="visit-card-title">{{ visit.title }}</h5>
+                <p class="text-muted small mb-3 flex-grow-1">
+                  {{ visit.description[:110] }}{% if visit.description|length > 110 %}...{% endif %}
+                </p>
+
+                <div class="visit-meta-item">
+                  <i class="bi bi-calendar-check"></i>
+                  <span><strong>Date:</strong> {{ visit.visit_date|format_date }}</span>
+                </div>
+
+                <div class="visit-meta-item">
+                  <i class="bi bi-geo-alt"></i>
+                  <span>{{ visit.location[:30] }}{% if visit.location|length > 30 %}...{% endif %}</span>
+                </div>
+
+                <div class="visit-meta-item">
+                  <i class="bi bi-people"></i>
+                  <span><strong>{{ visit.available_seats }} seats left</strong> of {{ visit.capacity }}</span>
+                </div>
+
+                <!-- Capacity Progress Bar -->
+                <div class="capacity-meter">
+                  {% set pct = (visit.confirmed_registrations_count / visit.capacity * 100)|int if visit.capacity > 0 else 0 %}
+                  <div class="capacity-meter-fill {% if pct >= 90 %}danger{% elif pct >= 75 %}warning{% endif %}" style="width: {{ pct }}%;"></div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                  <div>
+                    <span class="text-muted small d-block">Registration Fee</span>
+                    <span class="fs-5 fw-bold text-primary">{{ visit.fee|format_inr }}</span>
+                  </div>
+                  <a href="{{ url_for('main.visit_details', visit_id=visit.id) }}" class="btn btn-navy btn-sm px-3" id="btn-visit-{{ visit.id }}">
+                    View Details
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12">
+          <div class="empty-state">
+            <i class="bi bi-calendar-x empty-state-icon"></i>
+            <h5>No Upcoming Visits Currently Scheduled</h5>
+            <p class="text-muted">New industrial tours are published regularly. Check back soon!</p>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5 bg-white border-top" id="how-it-works">
+  <div class="container py-4">
+    <div class="text-center max-w-700 mx-auto mb-5">
+      <span class="text-primary fw-bold text-uppercase small tracking-wide">Simple & Seamless</span>
+      <h2 class="fw-bold">How The Portal Works</h2>
+      <p class="text-muted">From discovering open industrial visits to confirmed seats in four simple steps.</p>
+    </div>
+
+    <div class="row g-4 text-center">
+      <div class="col-md-3">
+        <div class="p-4 rounded-3 h-100 bg-light border border-light">
+          <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm" style="width: 60px; height: 60px;">
+            <i class="bi bi-search fs-4"></i>
+          </div>
+          <h5 class="fw-bold">1. Explore Tours</h5>
+          <p class="text-muted small mb-0">Browse through department-specific plant tours, technology hubs, and manufacturing visits.</p>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="p-4 rounded-3 h-100 bg-light border border-light">
+          <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm" style="width: 60px; height: 60px;">
+            <i class="bi bi-shield-check fs-4"></i>
+          </div>
+          <h5 class="fw-bold">2. Check Eligibility</h5>
+          <p class="text-muted small mb-0">Our system automatically verifies your department, academic year, and emergency contact details.</p>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="p-4 rounded-3 h-100 bg-light border border-light">
+          <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm" style="width: 60px; height: 60px;">
+            <i class="bi bi-credit-card fs-4"></i>
+          </div>
+          <h5 class="fw-bold">3. Secure Payment</h5>
+          <p class="text-muted small mb-0">Pay online securely via Razorpay (UPI, NetBanking, Cards) or Dev Mock Gateway.</p>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="p-4 rounded-3 h-100 bg-light border border-light">
+          <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm" style="width: 60px; height: 60px;">
+            <i class="bi bi-receipt fs-4"></i>
+          </div>
+          <h5 class="fw-bold">4. Instant Receipt</h5>
+          <p class="text-muted small mb-0">Get an official verified printable receipt with bus boarding details and safety instructions.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Student Testimonials -->
+<section class="py-5 bg-light">
+  <div class="container py-4">
+    <div class="text-center max-w-700 mx-auto mb-5">
+      <span class="text-primary fw-bold text-uppercase small tracking-wide">Student Experiences</span>
+      <h2 class="fw-bold">What Our Students Say</h2>
+      <p class="text-muted">Real feedback from students who attended previous industrial tours.</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-4">
+          <div class="d-flex text-warning mb-3">
+            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+          </div>
+          <p class="text-muted small flex-grow-1">
+            "The Tata Motors robotics assembly plant tour gave us incredible clarity on PLC programming and automated conveyor systems. Seeing the Nexon EV battery pack assembly in person was an unforgettable experience!"
+          </p>
+          <div class="d-flex align-items-center gap-3 pt-3 border-top">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 42px; height: 42px;">
+              AS
+            </div>
+            <div>
+              <h6 class="mb-0 fw-bold">Aditya Sawant</h6>
+              <small class="text-muted">Final Year, Mechanical Engg.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-4">
+          <div class="d-flex text-warning mb-3">
+            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+          </div>
+          <p class="text-muted small flex-grow-1">
+            "Visiting Infosys Pune and seeing their enterprise cloud operations center opened our eyes to how global scale applications are architected and secured. The Q&A with Senior Solution Architects was super insightful."
+          </p>
+          <div class="d-flex align-items-center gap-3 pt-3 border-top">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 42px; height: 42px;">
+              PK
+            </div>
+            <div>
+              <h6 class="mb-0 fw-bold">Pooja Kulkarni</h6>
+              <small class="text-muted">Third Year, Computer Engg.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-4">
+          <div class="d-flex text-warning mb-3">
+            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+          </div>
+          <p class="text-muted small flex-grow-1">
+            "Registration was instantaneous! The Razorpay mock payment allowed us to confirm our seats smoothly, and the printable receipt had all bus departure timings and safety rules clearly marked."
+          </p>
+          <div class="d-flex align-items-center gap-3 pt-3 border-top">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 42px; height: 42px;">
+              RD
+            </div>
+            <div>
+              <h6 class="mb-0 fw-bold">Rohan Deshmukh</h6>
+              <small class="text-muted">Second Year, Civil Engg.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Frequently Asked Questions -->
+<section class="py-5 bg-white border-top">
+  <div class="container py-4">
+    <div class="text-center max-w-700 mx-auto mb-5">
+      <span class="text-primary fw-bold text-uppercase small tracking-wide">Common Queries</span>
+      <h2 class="fw-bold">Frequently Asked Questions</h2>
+      <p class="text-muted">Everything you need to know about industrial visit bookings and safety norms.</p>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="accordion accordion-flush shadow-sm rounded-3 overflow-hidden border" id="faqAccordion">
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                Who is eligible to register for Industrial Visits?
+              </button>
+            </h2>
+            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+              <div class="accordion-body text-muted small">
+                Eligibility is configured per visit based on relevance to academic branches and year of study. When browsing visits, the portal automatically indicates whether your profile is eligible.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                What does the registration fee cover?
+              </button>
+            </h2>
+            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body text-muted small">
+                The fee generally covers college-organized air-conditioned bus transit, security clearance processing, PPE (safety gear), industrial lunch / refreshments, and an official participation certificate.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                Can I cancel my registration and get a refund?
+              </button>
+            </h2>
+            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body text-muted small">
+                Cancellations can be made directly through the Student Dashboard up until 48 hours before the scheduled visit date. Refunds are processed according to college guidelines.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                What safety regulations and dress codes must be followed?
+              </button>
+            </h2>
+            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body text-muted small">
+                Manufacturing facilities strictly mandate fully enclosed leather shoes or safety boots, formal or college uniform attire, and physical college ID cards. Photography inside secure plant floors is strictly restricted.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Call to Action Banner -->
+<section class="py-5 bg-primary text-white text-center">
+  <div class="container py-4">
+    <h2 class="fw-bold mb-3">Ready to Experience Cutting-Edge Industry Firsthand?</h2>
+    <p class="text-white-50 mb-4 max-w-600 mx-auto">
+      Create your student account today, explore upcoming plant tours, and confirm your participation in minutes.
+    </p>
+    {% if not current_user.is_authenticated %}
+      <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg px-5 fw-bold text-primary shadow" id="cta-btn-register">
+        Get Started Now
+      </a>
+    {% else %}
+      <a href="{{ url_for('main.visits') }}" class="btn btn-light btn-lg px-5 fw-bold text-primary shadow" id="cta-btn-browse">
+        Browse Available Visits
+      </a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

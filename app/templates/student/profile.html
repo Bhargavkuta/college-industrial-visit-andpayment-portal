@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}My Student Profile{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+      <div class="bg-primary text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+        <i class="bi bi-person-fill fs-5"></i>
+      </div>
+      <div>
+        <h6 class="mb-0 fw-bold">{{ current_user.full_name }}</h6>
+        <small class="text-muted">{{ current_user.roll_number }}</small>
+      </div>
+    </div>
+
+    <div class="sidebar-heading">Navigation</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('student.dashboard') }}" class="sidebar-link">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('main.visits') }}" class="sidebar-link">
+          <i class="bi bi-compass"></i>
+          <span>Explore Visits</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('student.registrations') }}" class="sidebar-link">
+          <i class="bi bi-ticket-perforated"></i>
+          <span>My Registrations</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('student.profile') }}" class="sidebar-link active">
+          <i class="bi bi-person-gear"></i>
+          <span>Profile & Settings</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-heading mt-4">Account</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('auth.logout') }}" class="sidebar-link text-danger">
+          <i class="bi bi-box-arrow-right text-danger"></i>
+          <span>Sign Out</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <h2 class="dashboard-title">Student Profile & Settings</h2>
+        <p class="dashboard-subtitle">Manage your personal contact info, academic details, and password security.</p>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Profile Information Card -->
+      <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+          <h4 class="fw-bold mb-3"><i class="bi bi-person-lines-fill text-primary me-2"></i>Personal & Academic Information</h4>
+
+          <form method="POST" action="{{ url_for('student.profile') }}" novalidate>
+            {{ profile_form.hidden_tag() }}
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-12">
+                <label for="full_name" class="form-label fw-semibold small">Full Name</label>
+                {{ profile_form.full_name(class="form-control", id="full_name") }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold small text-muted">College Email (Locked)</label>
+                <input type="text" class="form-control bg-light" value="{{ current_user.email }}" readonly disabled>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold small text-muted">Roll Number / PRN (Locked)</label>
+                <input type="text" class="form-control bg-light font-monospace" value="{{ current_user.roll_number }}" readonly disabled>
+              </div>
+
+              <div class="col-md-6">
+                <label for="phone" class="form-label fw-semibold small">Mobile Number</label>
+                {{ profile_form.phone(class="form-control", id="phone") }}
+              </div>
+
+              <div class="col-md-6">
+                <label for="department" class="form-label fw-semibold small">Department</label>
+                {{ profile_form.department(class="form-select", id="department") }}
+              </div>
+
+              <div class="col-md-6">
+                <label for="year" class="form-label fw-semibold small">Academic Year</label>
+                {{ profile_form.year(class="form-select", id="year") }}
+              </div>
+
+              <div class="col-md-6">
+                <label for="division" class="form-label fw-semibold small">Class Division</label>
+                {{ profile_form.division(class="form-select", id="division") }}
+              </div>
+            </div>
+
+            <div class="pt-3 border-top text-end">
+              <button type="submit" name="submit_profile" class="btn btn-primary px-4 fw-bold" id="btn-save-profile">
+                <i class="bi bi-check-lg me-1"></i> Save Profile Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Change Password Card -->
+      <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+          <h4 class="fw-bold mb-3"><i class="bi bi-shield-lock text-primary me-2"></i>Change Password</h4>
+
+          <form method="POST" action="{{ url_for('student.change_password') }}" novalidate>
+            {{ password_form.hidden_tag() }}
+
+            <div class="mb-3">
+              <label for="current_password" class="form-label fw-semibold small">Current Password</label>
+              {{ password_form.current_password(class="form-control" + (" is-invalid" if password_form.current_password.errors else ""), placeholder="••••••••", id="current_password") }}
+              {% if password_form.current_password.errors %}
+                <div class="text-danger small mt-1">{% for error in password_form.current_password.errors %}{{ error }}{% endfor %}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label for="password" class="form-label fw-semibold small">New Password</label>
+              {{ password_form.new_password(class="form-control" + (" is-invalid" if password_form.new_password.errors else ""), placeholder="Min 8 chars, 1 digit, 1 special", id="password") }}
+              
+              <div class="progress mt-2" style="height: 5px;">
+                <div id="password-strength-bar" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+              </div>
+              <div id="password-strength-text" class="form-text small"></div>
+              
+              {% if password_form.new_password.errors %}
+                <div class="text-danger small mt-1">{% for error in password_form.new_password.errors %}{{ error }}{% endfor %}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-4">
+              <label for="confirm_password" class="form-label fw-semibold small">Confirm New Password</label>
+              {{ password_form.confirm_new_password(class="form-control" + (" is-invalid" if password_form.confirm_new_password.errors else ""), placeholder="Repeat new password", id="confirm_password") }}
+              <div id="password-match-text" class="form-text small"></div>
+              {% if password_form.confirm_new_password.errors %}
+                <div class="text-danger small mt-1">{% for error in password_form.confirm_new_password.errors %}{{ error }}{% endfor %}</div>
+              {% endif %}
+            </div>
+
+            <div class="pt-3 border-top">
+              <button type="submit" class="btn btn-navy w-100 fw-bold py-2" id="btn-change-password-submit">
+                <i class="bi bi-key me-1"></i> Update Password
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

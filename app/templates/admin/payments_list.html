@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Payments & Financial Ledger{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+      <div class="bg-navy text-white rounded-circle p-2 d-flex align-items-center justify-content-center bg-primary" style="width: 44px; height: 44px;">
+        <i class="bi bi-shield-lock-fill fs-5"></i>
+      </div>
+      <div>
+        <h6 class="mb-0 fw-bold">Admin Console</h6>
+        <small class="text-muted">{{ college_code }} IARC Cell</small>
+      </div>
+    </div>
+
+    <div class="sidebar-heading">Core Management</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.visits') }}" class="sidebar-link">
+          <i class="bi bi-calendar4-event"></i>
+          <span>Industrial Visits</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.registrations') }}" class="sidebar-link">
+          <i class="bi bi-card-checklist"></i>
+          <span>Registrations</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.students') }}" class="sidebar-link">
+          <i class="bi bi-people"></i>
+          <span>Enrolled Students</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.payments') }}" class="sidebar-link active">
+          <i class="bi bi-credit-card"></i>
+          <span>Payments Ledger</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.reports') }}" class="sidebar-link">
+          <i class="bi bi-bar-chart-line"></i>
+          <span>Reports & Analytics</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-heading mt-4">System Actions</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('main.index') }}" class="sidebar-link" target="_blank">
+          <i class="bi bi-box-arrow-up-right"></i>
+          <span>View Public Site</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('auth.logout') }}" class="sidebar-link text-danger">
+          <i class="bi bi-box-arrow-right text-danger"></i>
+          <span>Sign Out</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <h2 class="dashboard-title">Payments & Financial Transactions</h2>
+        <p class="dashboard-subtitle">Audit Razorpay transactions, development simulated payments, and revenue accounts.</p>
+      </div>
+    </div>
+
+    <!-- KPI Summary Row -->
+    <div class="row g-3 mb-4">
+      <div class="col-xl-3 col-md-6">
+        <div class="kpi-card">
+          <div class="kpi-icon-box kpi-icon-green">
+            <i class="bi bi-cash-stack"></i>
+          </div>
+          <div>
+            <div class="kpi-title">Total Revenue</div>
+            <div class="kpi-value text-success">{{ total_revenue|format_inr }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <div class="kpi-card">
+          <div class="kpi-icon-box kpi-icon-blue">
+            <i class="bi bi-check-circle"></i>
+          </div>
+          <div>
+            <div class="kpi-title">Successful Transactions</div>
+            <div class="kpi-value">{{ successful_count }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <div class="kpi-card">
+          <div class="kpi-icon-box kpi-icon-amber">
+            <i class="bi bi-hourglass-split"></i>
+          </div>
+          <div>
+            <div class="kpi-title">Pending / In-Process</div>
+            <div class="kpi-value">{{ pending_count }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <div class="kpi-card">
+          <div class="kpi-icon-box kpi-icon-purple">
+            <i class="bi bi-x-circle"></i>
+          </div>
+          <div>
+            <div class="kpi-title">Failed Transactions</div>
+            <div class="kpi-value text-danger">{{ failed_count }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Filters -->
+    <ul class="nav nav-pills mb-4">
+      <li class="nav-item">
+        <a class="nav-link {% if active_status == 'all' %}active{% endif %}" href="{{ url_for('admin.payments', status='all') }}">All Payments</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if active_status == 'successful' %}active{% endif %}" href="{{ url_for('admin.payments', status='successful') }}">Successful</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if active_status == 'pending' %}active{% endif %}" href="{{ url_for('admin.payments', status='pending') }}">Pending</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if active_status == 'failed' %}active{% endif %}" href="{{ url_for('admin.payments', status='failed') }}">Failed</a>
+      </li>
+    </ul>
+
+    <!-- Payments Table -->
+    <div class="card-table-wrapper">
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Txn ID</th>
+              <th>Student Name & PRN</th>
+              <th>Registration ID</th>
+              <th>Industrial Visit</th>
+              <th>Amount</th>
+              <th>Payment Method</th>
+              <th>Timestamp</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if payments %}
+              {% for p in payments %}
+                <tr>
+                  <td>
+                    <span class="font-monospace fw-bold text-dark">{{ p.razorpay_payment_id or p.razorpay_order_id or 'TXN-0' ~ p.id }}</span>
+                  </td>
+                  <td>
+                    <div class="fw-bold text-dark">{{ p.registration.student.full_name }}</div>
+                    <small class="text-muted font-monospace">{{ p.registration.student.roll_number }}</small>
+                  </td>
+                  <td>
+                    <a href="{{ url_for('admin.registration_detail', reg_id=p.registration.id) }}" class="font-monospace text-decoration-none">
+                      {{ p.registration.registration_id }}
+                    </a>
+                  </td>
+                  <td>
+                    <div class="fw-semibold">{{ p.registration.visit.company_name }}</div>
+                    <small class="text-muted">{{ p.registration.visit.title[:25] }}...</small>
+                  </td>
+                  <td>
+                    <strong class="text-primary">{{ p.formatted_amount }}</strong>
+                  </td>
+                  <td>
+                    <small class="text-muted">{{ p.payment_method }}</small>
+                  </td>
+                  <td>
+                    <small class="text-muted">{{ p.created_at|format_date('%d %b %Y, %H:%M') }}</small>
+                  </td>
+                  <td>
+                    <span class="badge {{ p.status_badge_class }}">{{ p.status|upper }}</span>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="8" class="text-center py-5 text-muted">No financial transactions found.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js CDN for Analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+      <div class="bg-navy text-white rounded-circle p-2 d-flex align-items-center justify-content-center bg-primary" style="width: 44px; height: 44px;">
+        <i class="bi bi-shield-lock-fill fs-5"></i>
+      </div>
+      <div>
+        <h6 class="mb-0 fw-bold">Admin Console</h6>
+        <small class="text-muted">{{ college_code }} IARC Cell</small>
+      </div>
+    </div>
+
+    <div class="sidebar-heading">Core Management</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link active">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.visits') }}" class="sidebar-link">
+          <i class="bi bi-calendar4-event"></i>
+          <span>Industrial Visits</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.registrations') }}" class="sidebar-link">
+          <i class="bi bi-card-checklist"></i>
+          <span>Registrations</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.students') }}" class="sidebar-link">
+          <i class="bi bi-people"></i>
+          <span>Enrolled Students</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.payments') }}" class="sidebar-link">
+          <i class="bi bi-credit-card"></i>
+          <span>Payments Ledger</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.reports') }}" class="sidebar-link">
+          <i class="bi bi-bar-chart-line"></i>
+          <span>Reports & Analytics</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-heading mt-4">System Actions</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('main.index') }}" class="sidebar-link" target="_blank">
+          <i class="bi bi-box-arrow-up-right"></i>
+          <span>View Public Site</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('auth.logout') }}" class="sidebar-link text-danger">
+          <i class="bi bi-box-arrow-right text-danger"></i>
+          <span>Sign Out</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Dashboard Content -->
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <h2 class="dashboard-title">Administrative Overview</h2>
+        <p class="dashboard-subtitle">Monitor student participation, financial collections, and industrial tours.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.create_visit') }}" class="btn btn-primary" id="btn-admin-create-visit">
+          <i class="bi bi-plus-lg me-1"></i> Create Industrial Visit
+        </a>
+        <a href="{{ url_for('admin.export_registrations_excel') }}" class="btn btn-outline-success">
+          <i class="bi bi-file-earmark-excel me-1"></i> Export Master Excel
+        </a>
+      </div>
+    </div>
+
+    <!-- KPI Summary Row -->
+    <div class="row g-3 mb-4">
+      <div class="col-xl-2 col-md-4 col-6">
+        <div class="kpi-card">
+          <div class="kpi-icon-box kpi-icon-blue">
+            <i class="bi bi-mortarboard"></i>
+          </div>
+          <div>
+            <div class="kpi-title">Total Students</div>
+            <div class="kpi-value">{{ total_students }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-2 col-md-4 col-6">
+        <div class="kpi-card">
+          <div class="kpi-icon-box kpi-icon-green">
+            <i class="bi bi-buildings"></i>
+          </div>
+          <div>
+            <div class="kpi-title">Active Visits</div>
+            <div class="kpi-value">{{ active_visits }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-4 col-6">
+        <div class="kpi-card">
+          <div class="kpi-icon-box kpi-icon-purple">
+            <i class="bi bi-ticket-perforated"></i>
+          </div>
+          <div>
+            <div class="kpi-title">Total Registrations</div>
+            <div class="kpi-value">{{ total_registrations }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-2 col-md-6 col-6">
+        <div class="kpi-card">
+          <div class="kpi-icon-box kpi-icon-amber">
+            <i class="bi bi-check-circle"></i>
+          </div>
+          <div>
+            <div class="kpi-title">Paid Registrations</div>
+            <div class="kpi-value">{{ successful_payments_count }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6 col-12">
+        <div class="kpi-card">
+          <div class="kpi-icon-box kpi-icon-green">
+            <i class="bi bi-cash-stack"></i>
+          </div>
+          <div>
+            <div class="kpi-title">Total Revenue Collected</div>
+            <div class="kpi-value text-primary fs-4">{{ total_revenue|format_inr }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Charts Row -->
+    <div class="row g-4 mb-4">
+      <!-- Registrations by Department -->
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Registrations by Department</h5>
+            <small class="text-muted">Confirmed Students</small>
+          </div>
+          <div style="height: 260px;">
+            <canvas id="deptChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Popular Visits Participation -->
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Tour Participation by Company</h5>
+            <small class="text-muted">Top Visited Partners</small>
+          </div>
+          <div style="height: 260px;">
+            <canvas id="visitChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Registrations & Upcoming Visits Row -->
+    <div class="row g-4">
+      <!-- Recent Registrations Table -->
+      <div class="col-lg-7">
+        <div class="card-table-wrapper h-100">
+          <div class="card-table-header">
+            <h5 class="fw-bold mb-0">Recent Registrations</h5>
+            <a href="{{ url_for('admin.registrations') }}" class="btn btn-outline-primary btn-sm">View All</a>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-custom">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Visit</th>
+                  <th>Payment</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if recent_registrations %}
+                  {% for reg in recent_registrations %}
+                    <tr>
+                      <td>
+                        <div class="fw-bold text-dark">{{ reg.student.full_name }}</div>
+                        <small class="text-muted font-monospace">{{ reg.student.roll_number }}</small>
+                      </td>
+                      <td>
+                        <div class="fw-semibold">{{ reg.visit.company_name }}</div>
+                        <small class="text-muted">{{ reg.visit.visit_date|format_date }}</small>
+                      </td>
+                      <td>
+                        {% if reg.latest_payment %}
+                          <span class="badge {{ reg.latest_payment.status_badge_class }}">
+                            {{ reg.latest_payment.status|upper }}
+                          </span>
+                        {% else %}
+                          <span class="badge bg-secondary">UNPAID</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <span class="badge {{ reg.status_badge_class }}">{{ reg.status|upper }}</span>
+                      </td>
+                      <td>
+                        <a href="{{ url_for('admin.registration_detail', reg_id=reg.id) }}" class="btn btn-outline-secondary btn-sm" title="Audit Details">
+                          <i class="bi bi-eye"></i>
+                        </a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="5" class="text-center py-4 text-muted">No student registrations logged yet.</td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Scheduled Visits -->
+      <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Upcoming Schedule</h5>
+            <a href="{{ url_for('admin.visits') }}" class="btn btn-outline-primary btn-sm">Manage</a>
+          </div>
+
+          {% if upcoming_visits %}
+            {% for v in upcoming_visits %}
+              <div class="p-3 bg-light rounded-3 mb-3 border">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <strong class="text-dark">{{ v.company_name }}</strong>
+                  <span class="badge {{ v.status_badge_class }}">{{ v.status|upper }}</span>
+                </div>
+                <div class="small text-muted mb-2">{{ v.title }}</div>
+                <div class="d-flex justify-content-between align-items-center small">
+                  <span><i class="bi bi-calendar me-1"></i>{{ v.visit_date|format_date }}</span>
+                  <span class="fw-bold text-primary">{{ v.confirmed_registrations_count }} / {{ v.capacity }} Seats</span>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted small">No upcoming visits scheduled.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Chart 1: Department Distribution
+  const deptCtx = document.getElementById('deptChart').getContext('2d');
+  const deptLabels = {{ dept_labels_json|safe }};
+  const deptCounts = {{ dept_counts_json|safe }};
+
+  new Chart(deptCtx, {
+    type: 'bar',
+    data: {
+      labels: deptLabels,
+      datasets: [{
+        label: 'Confirmed Students',
+        data: deptCounts,
+        backgroundColor: '#3b82f6',
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0 } },
+        x: { ticks: { autoSkip: false, maxRotation: 30, minRotation: 0, font: { size: 10 } } }
+      }
+    }
+  });
+
+  // Chart 2: Tour Participation
+  const visitCtx = document.getElementById('visitChart').getContext('2d');
+  const visitLabels = {{ visit_labels_json|safe }};
+  const visitCounts = {{ visit_counts_json|safe }};
+
+  new Chart(visitCtx, {
+    type: 'doughnut',
+    data: {
+      labels: visitLabels,
+      datasets: [{
+        data: visitCounts.length > 0 && visitCounts.some(x => x > 0) ? visitCounts : [1, 1, 1, 1, 1],
+        backgroundColor: ['#1e3a8a', '#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

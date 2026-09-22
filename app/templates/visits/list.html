@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Explore Industrial Visits{% endblock %}
+
+{% block content %}
+<div class="py-4 bg-white border-bottom">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h1 class="h3 fw-bold mb-1">Explore Industrial Visits</h1>
+        <p class="text-muted small mb-0">Browse accredited company tours, R&D lab visits, and automated plant walkthroughs</p>
+      </div>
+      <div class="text-muted small">
+        Showing <strong>{{ visits|length }}</strong> available visit{% if visits|length != 1 %}s{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="py-4 bg-light">
+  <div class="container">
+    <!-- Search and Multi-Filter Form -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-4">
+      <form method="GET" action="{{ url_for('main.visits') }}" id="filter-form">
+        <div class="row g-3">
+          <!-- Search Box -->
+          <div class="col-lg-4 col-md-6">
+            <label class="form-label small fw-bold text-muted">Search Keywords</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+              <input type="text" name="search" class="form-control" placeholder="Company, title, location..." value="{{ search }}" id="input-search">
+            </div>
+          </div>
+
+          <!-- Department Filter -->
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label small fw-bold text-muted">Department</label>
+            <select name="department" class="form-select" id="select-dept">
+              <option value="All" {% if selected_dept == 'All' or not selected_dept %}selected{% endif %}>All Departments</option>
+              <option value="Computer Engineering" {% if selected_dept == 'Computer Engineering' %}selected{% endif %}>Computer Engineering</option>
+              <option value="Information Technology" {% if selected_dept == 'Information Technology' %}selected{% endif %}>Information Technology</option>
+              <option value="Mechanical Engineering" {% if selected_dept == 'Mechanical Engineering' %}selected{% endif %}>Mechanical Engineering</option>
+              <option value="Civil Engineering" {% if selected_dept == 'Civil Engineering' %}selected{% endif %}>Civil Engineering</option>
+              <option value="Electrical Engineering" {% if selected_dept == 'Electrical Engineering' %}selected{% endif %}>Electrical Engineering</option>
+              <option value="Automobile Engineering" {% if selected_dept == 'Automobile Engineering' %}selected{% endif %}>Automobile Engineering</option>
+            </select>
+          </div>
+
+          <!-- Location Filter -->
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label small fw-bold text-muted">Location</label>
+            <select name="location" class="form-select" id="select-loc">
+              <option value="" {% if not selected_loc %}selected{% endif %}>All Locations</option>
+              {% for loc in locations %}
+                <option value="{{ loc }}" {% if selected_loc == loc %}selected{% endif %}>{{ loc[:35] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Price Range Filter -->
+          <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-bold text-muted">Price Range</label>
+            <select name="price" class="form-select" id="select-price">
+              <option value="" {% if not selected_price %}selected{% endif %}>All Prices</option>
+              <option value="free" {% if selected_price == 'free' %}selected{% endif %}>Free Only (₹0)</option>
+              <option value="under500" {% if selected_price == 'under500' %}selected{% endif %}>Up to ₹500</option>
+              <option value="under1000" {% if selected_price == 'under1000' %}selected{% endif %}>Up to ₹1,000</option>
+            </select>
+          </div>
+
+          <!-- Availability Filter -->
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label small fw-bold text-muted">Availability</label>
+            <select name="availability" class="form-select" id="select-avail">
+              <option value="" {% if not selected_availability %}selected{% endif %}>All Statuses</option>
+              <option value="open" {% if selected_availability == 'open' %}selected{% endif %}>Open Seats Only</option>
+            </select>
+          </div>
+
+          <!-- Date Filter -->
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label small fw-bold text-muted">Timeline</label>
+            <select name="date" class="form-select" id="select-date">
+              <option value="upcoming" {% if selected_date == 'upcoming' or not selected_date %}selected{% endif %}>Upcoming Visits</option>
+              <option value="past" {% if selected_date == 'past' %}selected{% endif %}>Past Visits</option>
+              <option value="all" {% if selected_date == 'all' %}selected{% endif %}>All Timeline</option>
+            </select>
+          </div>
+
+          <!-- Sort Order -->
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label small fw-bold text-muted">Sort By</label>
+            <select name="sort" class="form-select" id="select-sort">
+              <option value="date_asc" {% if selected_sort == 'date_asc' %}selected{% endif %}>Visit Date (Soonest First)</option>
+              <option value="date_desc" {% if selected_sort == 'date_desc' %}selected{% endif %}>Visit Date (Latest First)</option>
+              <option value="price_low" {% if selected_sort == 'price_low' %}selected{% endif %}>Fee: Low to High</option>
+              <option value="price_high" {% if selected_sort == 'price_high' %}selected{% endif %}>Fee: High to Low</option>
+              <option value="title_asc" {% if selected_sort == 'title_asc' %}selected{% endif %}>Title: A to Z</option>
+            </select>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="col-lg-3 col-md-6 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-primary flex-grow-1" id="btn-apply-filters">
+              <i class="bi bi-funnel me-1"></i> Apply Filters
+            </button>
+            <a href="{{ url_for('main.visits') }}" class="btn btn-outline-secondary" title="Reset Filters" id="btn-reset-filters">
+              <i class="bi bi-arrow-counterclockwise"></i>
+            </a>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Visits Cards Grid -->
+    <div class="row g-4">
+      {% if visits %}
+        {% for visit in visits %}
+          <div class="col-lg-4 col-md-6">
+            <div class="visit-card">
+              <div class="visit-card-img-wrapper">
+                <img src="{{ visit.cover_image or 'https://images.unsplash.com/photo-1565043589221-1a6fd9ae45c7?w=600&auto=format&fit=crop&q=80' }}" alt="{{ visit.title }}" class="visit-card-img">
+                <span class="visit-card-badge {{ visit.status_badge_class }}">
+                  {{ visit.dynamic_status }}
+                </span>
+                <img src="{{ visit.company_logo or 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=100&auto=format&fit=crop&q=80' }}" alt="{{ visit.company_name }}" class="visit-card-company-logo">
+              </div>
+
+              <div class="visit-card-body">
+                <div class="visit-card-company">{{ visit.company_name }}</div>
+                <h5 class="visit-card-title">{{ visit.title }}</h5>
+                <p class="text-muted small mb-3 flex-grow-1">
+                  {{ visit.description[:110] }}{% if visit.description|length > 110 %}...{% endif %}
+                </p>
+
+                <div class="visit-meta-item">
+                  <i class="bi bi-calendar-check"></i>
+                  <span><strong>Date:</strong> {{ visit.visit_date|format_date }} ({{ visit.start_time|format_time }})</span>
+                </div>
+
+                <div class="visit-meta-item">
+                  <i class="bi bi-geo-alt"></i>
+                  <span>{{ visit.location[:30] }}{% if visit.location|length > 30 %}...{% endif %}</span>
+                </div>
+
+                <div class="visit-meta-item">
+                  <i class="bi bi-mortarboard"></i>
+                  <span>{{ visit.eligibility_departments[:28] }}{% if visit.eligibility_departments|length > 28 %}...{% endif %}</span>
+                </div>
+
+                <div class="visit-meta-item">
+                  <i class="bi bi-people"></i>
+                  <span><strong>{{ visit.available_seats }} seats left</strong> of {{ visit.capacity }}</span>
+                </div>
+
+                <!-- Capacity Progress Bar -->
+                <div class="capacity-meter">
+                  {% set pct = (visit.confirmed_registrations_count / visit.capacity * 100)|int if visit.capacity > 0 else 0 %}
+                  <div class="capacity-meter-fill {% if pct >= 90 %}danger{% elif pct >= 75 %}warning{% endif %}" style="width: {{ pct }}%;"></div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                  <div>
+                    <span class="text-muted small d-block">Registration Fee</span>
+                    <span class="fs-5 fw-bold text-primary">{{ visit.fee|format_inr }}</span>
+                  </div>
+                  <a href="{{ url_for('main.visit_details', visit_id=visit.id) }}" class="btn btn-navy btn-sm px-3" id="btn-view-visit-{{ visit.id }}">
+                    View Details
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12">
+          <div class="empty-state">
+            <i class="bi bi-search empty-state-icon"></i>
+            <h5>No Industrial Visits Found</h5>
+            <p class="text-muted">No visits matched your selected criteria. Try adjusting your filters or search keywords.</p>
+            <a href="{{ url_for('main.visits') }}" class="btn btn-primary mt-2">Clear All Filters</a>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

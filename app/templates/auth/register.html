@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Student Registration{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="auth-logo">
+            <i class="bi bi-mortarboard"></i>
+          </div>
+          <h3 class="fw-bold mb-1">Student Account Registration</h3>
+          <p class="text-muted small">Create your student profile to register for upcoming college industrial visits</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.register') }}" novalidate id="student-registration-form">
+          {{ form.hidden_tag() }}
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-12">
+              <label for="full_name" class="form-label fw-semibold small">Full Name (as per College ID) <span class="text-danger">*</span></label>
+              {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else ""), placeholder="e.g. Bhargav Sharma", id="full_name") }}
+              {% if form.full_name.errors %}
+                <div class="text-danger small mt-1">{% for error in form.full_name.errors %}{{ error }}{% endfor %}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label for="email" class="form-label fw-semibold small">College Email Address <span class="text-danger">*</span></label>
+              {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="student@college.edu", id="email") }}
+              {% if form.email.errors %}
+                <div class="text-danger small mt-1">{% for error in form.email.errors %}{{ error }}{% endfor %}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label for="roll_number" class="form-label fw-semibold small">Roll Number / Student PRN <span class="text-danger">*</span></label>
+              {{ form.roll_number(class="form-control" + (" is-invalid" if form.roll_number.errors else ""), placeholder="e.g. CS2026-042", id="roll_number") }}
+              {% if form.roll_number.errors %}
+                <div class="text-danger small mt-1">{% for error in form.roll_number.errors %}{{ error }}{% endfor %}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label for="phone" class="form-label fw-semibold small">Mobile Number <span class="text-danger">*</span></label>
+              {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else ""), placeholder="+91 98765 43210", id="phone") }}
+              {% if form.phone.errors %}
+                <div class="text-danger small mt-1">{% for error in form.phone.errors %}{{ error }}{% endfor %}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label for="department" class="form-label fw-semibold small">Department <span class="text-danger">*</span></label>
+              {{ form.department(class="form-select" + (" is-invalid" if form.department.errors else ""), id="department") }}
+              {% if form.department.errors %}
+                <div class="text-danger small mt-1">{% for error in form.department.errors %}{{ error }}{% endfor %}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label for="year" class="form-label fw-semibold small">Academic Year <span class="text-danger">*</span></label>
+              {{ form.year(class="form-select" + (" is-invalid" if form.year.errors else ""), id="year") }}
+              {% if form.year.errors %}
+                <div class="text-danger small mt-1">{% for error in form.year.errors %}{{ error }}{% endfor %}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label for="division" class="form-label fw-semibold small">Class Division <span class="text-danger">*</span></label>
+              {{ form.division(class="form-select" + (" is-invalid" if form.division.errors else ""), id="division") }}
+              {% if form.division.errors %}
+                <div class="text-danger small mt-1">{% for error in form.division.errors %}{{ error }}{% endfor %}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label for="password" class="form-label fw-semibold small">Password <span class="text-danger">*</span></label>
+              {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="Min 8 chars, 1 digit, 1 special", id="password") }}
+              
+              <!-- Dynamic Password Strength Bar -->
+              <div class="progress mt-2" style="height: 5px;">
+                <div id="password-strength-bar" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+              </div>
+              <div id="password-strength-text" class="form-text small"></div>
+              
+              {% if form.password.errors %}
+                <div class="text-danger small mt-1">{% for error in form.password.errors %}{{ error }}{% endfor %}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label for="confirm_password" class="form-label fw-semibold small">Confirm Password <span class="text-danger">*</span></label>
+              {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""), placeholder="Repeat your password", id="confirm_password") }}
+              <div id="password-match-text" class="form-text small"></div>
+              {% if form.confirm_password.errors %}
+                <div class="text-danger small mt-1">{% for error in form.confirm_password.errors %}{{ error }}{% endfor %}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="form-text text-muted mb-4 small">
+            <i class="bi bi-shield-check text-primary me-1"></i> Passwords must be at least 8 characters long and contain at least one numeric digit and one special symbol.
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" id="btn-register-submit">
+            <i class="bi bi-check-circle me-1"></i> Complete Student Registration
+          </button>
+        </form>
+
+        <div class="mt-4 pt-3 border-top text-center">
+          <p class="text-muted small mb-0">
+            Already have an account?
+            <a href="{{ url_for('auth.login') }}" class="text-primary fw-bold text-decoration-none ms-1">Sign In</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

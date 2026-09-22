@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Register for {{ visit.company_name }} Industrial Visit{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <!-- Registration Stepper -->
+      <div class="stepper mb-5">
+        <div class="step-item active">
+          <div class="step-circle">1</div>
+          <div class="step-label">Student Details</div>
+        </div>
+        <div class="step-item active">
+          <div class="step-circle">2</div>
+          <div class="step-label">Emergency Info</div>
+        </div>
+        <div class="step-item">
+          <div class="step-circle">3</div>
+          <div class="step-label">Payment & Confirmation</div>
+        </div>
+      </div>
+
+      <!-- Visit Summary Banner -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white border-start border-primary border-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div>
+            <span class="text-primary fw-bold small text-uppercase">{{ visit.company_name }}</span>
+            <h4 class="fw-bold mb-1">{{ visit.title }}</h4>
+            <div class="text-muted small">
+              <i class="bi bi-calendar-check me-1"></i>{{ visit.visit_date|format_date }} &bull;
+              <i class="bi bi-geo-alt me-1"></i>{{ visit.location }}
+            </div>
+          </div>
+          <div class="text-lg-end">
+            <span class="text-muted small d-block">Total Payable</span>
+            <span class="fs-4 fw-bold text-primary">{{ visit.fee|format_inr }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Registration Form Card -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+        <h4 class="fw-bold mb-4"><i class="bi bi-person-vcard text-primary me-2"></i>Review Profile & Emergency Contacts</h4>
+
+        <form method="POST" action="{{ url_for('student.register_visit', visit_id=visit.id) }}" novalidate id="registration-flow-form">
+          {{ form.hidden_tag() }}
+
+          <!-- Pre-filled verified student details -->
+          <div class="p-3 bg-light rounded-3 mb-4 border">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-check2-all text-success me-1"></i>Enrolled Student Profile (Verified)</h6>
+            <div class="row g-3 small">
+              <div class="col-md-6">
+                <span class="text-muted d-block">Student Name</span>
+                <strong class="text-dark">{{ current_user.full_name }}</strong>
+              </div>
+              <div class="col-md-6">
+                <span class="text-muted d-block">Roll Number / PRN</span>
+                <strong class="text-dark">{{ current_user.roll_number }}</strong>
+              </div>
+              <div class="col-md-6">
+                <span class="text-muted d-block">Department</span>
+                <strong class="text-dark">{{ current_user.department }}</strong>
+              </div>
+              <div class="col-md-6">
+                <span class="text-muted d-block">Year & Division</span>
+                <strong class="text-dark">{{ current_user.year }} (Div {{ current_user.division }})</strong>
+              </div>
+              <div class="col-md-6">
+                <span class="text-muted d-block">Email</span>
+                <strong class="text-dark">{{ current_user.email }}</strong>
+              </div>
+              <div class="col-md-6">
+                <span class="text-muted d-block">Mobile Number</span>
+                <strong class="text-dark">{{ current_user.phone }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Emergency Contact Info -->
+          <h5 class="fw-bold mb-3"><i class="bi bi-telephone-plus text-primary me-2"></i>Emergency Contact Details</h5>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label for="emergency_contact" class="form-label fw-semibold small">Emergency Contact Person & Relationship <span class="text-danger">*</span></label>
+              {{ form.emergency_contact(class="form-control" + (" is-invalid" if form.emergency_contact.errors else ""), placeholder="e.g. Ramesh Sharma (Father)", id="emergency_contact") }}
+              {% if form.emergency_contact.errors %}
+                <div class="text-danger small mt-1">{% for error in form.emergency_contact.errors %}{{ error }}{% endfor %}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label for="emergency_phone" class="form-label fw-semibold small">Emergency Contact Phone Number <span class="text-danger">*</span></label>
+              {{ form.emergency_phone(class="form-control" + (" is-invalid" if form.emergency_phone.errors else ""), placeholder="e.g. +91 98111 22233", id="emergency_phone") }}
+              {% if form.emergency_phone.errors %}
+                <div class="text-danger small mt-1">{% for error in form.emergency_phone.errors %}{{ error }}{% endfor %}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Policies & Code of Conduct Accordion -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold small mb-2">Safety & College Code of Conduct</label>
+            <div class="p-3 bg-light rounded-3 border small text-muted">
+              <ul class="mb-0 ps-3">
+                <li>I will carry my physical College ID Card and Government Photo ID at all times.</li>
+                <li>I agree to wear formal attire/college uniform and safety-compliant footwear as specified.</li>
+                <li>I understand photography is strictly regulated inside the partner industrial facility.</li>
+                <li>I acknowledge that registration fees are non-refundable within 48 hours of departure.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Consent Checkbox -->
+          <div class="form-check mb-4">
+            {{ form.terms_accepted(class="form-check-input" + (" is-invalid" if form.terms_accepted.errors else ""), id="terms_accepted") }}
+            <label class="form-check-label small fw-semibold text-dark" for="terms_accepted">
+              I have read, understood and agree to the College Industrial Visit Safety Norms and Rules. <span class="text-danger">*</span>
+            </label>
+            {% if form.terms_accepted.errors %}
+              <div class="text-danger small mt-1">{% for error in form.terms_accepted.errors %}{{ error }}{% endfor %}</div>
+            {% endif %}
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+            <a href="{{ url_for('main.visit_details', visit_id=visit.id) }}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left me-1"></i> Back to Visit Details
+            </a>
+            <button type="submit" class="btn btn-primary px-4 py-2 fw-bold" id="btn-proceed-payment">
+              Proceed to Payment <i class="bi bi-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

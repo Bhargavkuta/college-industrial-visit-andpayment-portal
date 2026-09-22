@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Registrations{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+      <div class="bg-navy text-white rounded-circle p-2 d-flex align-items-center justify-content-center bg-primary" style="width: 44px; height: 44px;">
+        <i class="bi bi-shield-lock-fill fs-5"></i>
+      </div>
+      <div>
+        <h6 class="mb-0 fw-bold">Admin Console</h6>
+        <small class="text-muted">{{ college_code }} IARC Cell</small>
+      </div>
+    </div>
+
+    <div class="sidebar-heading">Core Management</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.visits') }}" class="sidebar-link">
+          <i class="bi bi-calendar4-event"></i>
+          <span>Industrial Visits</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.registrations') }}" class="sidebar-link active">
+          <i class="bi bi-card-checklist"></i>
+          <span>Registrations</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.students') }}" class="sidebar-link">
+          <i class="bi bi-people"></i>
+          <span>Enrolled Students</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.payments') }}" class="sidebar-link">
+          <i class="bi bi-credit-card"></i>
+          <span>Payments Ledger</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.reports') }}" class="sidebar-link">
+          <i class="bi bi-bar-chart-line"></i>
+          <span>Reports & Analytics</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-heading mt-4">System Actions</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('main.index') }}" class="sidebar-link" target="_blank">
+          <i class="bi bi-box-arrow-up-right"></i>
+          <span>View Public Site</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('auth.logout') }}" class="sidebar-link text-danger">
+          <i class="bi bi-box-arrow-right text-danger"></i>
+          <span>Sign Out</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <h2 class="dashboard-title">Student Registrations Ledger</h2>
+        <p class="dashboard-subtitle">Monitor confirmed participants, verify fee receipts, and export records.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.export_registrations_csv', search=search, visit_id=selected_visit_id, department=selected_dept, year=selected_year, status=selected_reg_status, payment_status=selected_payment_status) }}" class="btn btn-outline-primary" id="btn-export-csv">
+          <i class="bi bi-file-earmark-text me-1"></i> Export CSV
+        </a>
+        <a href="{{ url_for('admin.export_registrations_excel', search=search, visit_id=selected_visit_id, department=selected_dept, year=selected_year, status=selected_reg_status, payment_status=selected_payment_status) }}" class="btn btn-success" id="btn-export-excel">
+          <i class="bi bi-file-earmark-excel me-1"></i> Export Excel (.xlsx)
+        </a>
+      </div>
+    </div>
+
+    <!-- Filter Form Card -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-4 bg-white">
+      <form method="GET" action="{{ url_for('admin.registrations') }}" id="admin-reg-filter">
+        <div class="row g-3">
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label small fw-bold text-muted">Search Student / PRN / Visit</label>
+            <input type="text" name="search" class="form-control" placeholder="Name, roll number, email..." value="{{ search }}">
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label small fw-bold text-muted">Filter by Visit</label>
+            <select name="visit_id" class="form-select">
+              <option value="">All Industrial Visits</option>
+              {% for v in visits %}
+                <option value="{{ v.id }}" {% if selected_visit_id == v.id|string %}selected{% endif %}>{{ v.company_name }} - {{ v.title[:25] }}...</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-bold text-muted">Department</label>
+            <select name="department" class="form-select">
+              <option value="All">All Departments</option>
+              <option value="Computer Engineering" {% if selected_dept == 'Computer Engineering' %}selected{% endif %}>Computer</option>
+              <option value="Information Technology" {% if selected_dept == 'Information Technology' %}selected{% endif %}>IT</option>
+              <option value="Mechanical Engineering" {% if selected_dept == 'Mechanical Engineering' %}selected{% endif %}>Mechanical</option>
+              <option value="Civil Engineering" {% if selected_dept == 'Civil Engineering' %}selected{% endif %}>Civil</option>
+              <option value="Electrical Engineering" {% if selected_dept == 'Electrical Engineering' %}selected{% endif %}>Electrical</option>
+            </select>
+          </div>
+
+          <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-bold text-muted">Registration Status</label>
+            <select name="status" class="form-select">
+              <option value="All">All Statuses</option>
+              <option value="confirmed" {% if selected_reg_status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+              <option value="pending" {% if selected_reg_status == 'pending' %}selected{% endif %}>Pending</option>
+              <option value="cancelled" {% if selected_reg_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+              <option value="completed" {% if selected_reg_status == 'completed' %}selected{% endif %}>Completed</option>
+            </select>
+          </div>
+
+          <div class="col-lg-2 col-md-6 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-primary flex-grow-1" id="btn-admin-filter">
+              <i class="bi bi-funnel"></i> Filter
+            </button>
+            <a href="{{ url_for('admin.registrations') }}" class="btn btn-outline-secondary" title="Reset">
+              <i class="bi bi-arrow-counterclockwise"></i>
+            </a>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Registrations Data Table -->
+    <div class="card-table-wrapper">
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Reg ID</th>
+              <th>Student Name & PRN</th>
+              <th>Dept & Year</th>
+              <th>Industrial Visit</th>
+              <th>Date</th>
+              <th>Payment Status</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if registrations %}
+              {% for reg in registrations %}
+                <tr>
+                  <td><span class="font-monospace fw-bold text-dark">{{ reg.registration_id }}</span></td>
+                  <td>
+                    <div class="fw-bold text-dark">{{ reg.student.full_name }}</div>
+                    <small class="text-muted font-monospace">{{ reg.student.roll_number }}</small>
+                  </td>
+                  <td>
+                    <div>{{ reg.student.department }}</div>
+                    <small class="text-muted">{{ reg.student.year }} ({{ reg.student.division }})</small>
+                  </td>
+                  <td>
+                    <div class="fw-semibold">{{ reg.visit.company_name }}</div>
+                    <small class="text-muted">{{ reg.visit.title[:25] }}...</small>
+                  </td>
+                  <td>
+                    <small class="text-muted">{{ reg.registered_at|format_date }}</small>
+                  </td>
+                  <td>
+                    {% if reg.latest_payment %}
+                      <span class="badge {{ reg.latest_payment.status_badge_class }}">
+                        {{ reg.latest_payment.status|upper }} ({{ reg.latest_payment.formatted_amount }})
+                      </span>
+                    {% else %}
+                      <span class="badge bg-secondary">UNPAID</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge {{ reg.status_badge_class }}">{{ reg.status|upper }}</span>
+                  </td>
+                  <td class="text-end">
+                    <div class="dropdown d-inline-block">
+                      <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Manage
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                        <li><a class="dropdown-item" href="{{ url_for('admin.registration_detail', reg_id=reg.id) }}"><i class="bi bi-eye me-2"></i>Audit Details</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('student.receipt', reg_id=reg.id) }}" target="_blank"><i class="bi bi-receipt me-2"></i>View Receipt</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li class="dropdown-header">Status Override</li>
+                        {% if reg.status != 'confirmed' %}
+                          <li><a class="dropdown-item text-success" href="{{ url_for('admin.update_registration_status', reg_id=reg.id, new_status='confirmed') }}"><i class="bi bi-check-circle me-2"></i>Mark Confirmed</a></li>
+                        {% endif %}
+                        {% if reg.status != 'cancelled' %}
+                          <li><a class="dropdown-item text-danger" href="{{ url_for('admin.update_registration_status', reg_id=reg.id, new_status='cancelled') }}"><i class="bi bi-x-circle me-2"></i>Cancel Registration</a></li>
+                        {% endif %}
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="8" class="text-center py-5 text-muted">
+                  No registration records found for the selected query.
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

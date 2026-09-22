@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Industrial Visits{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+      <div class="bg-navy text-white rounded-circle p-2 d-flex align-items-center justify-content-center bg-primary" style="width: 44px; height: 44px;">
+        <i class="bi bi-shield-lock-fill fs-5"></i>
+      </div>
+      <div>
+        <h6 class="mb-0 fw-bold">Admin Console</h6>
+        <small class="text-muted">{{ college_code }} IARC Cell</small>
+      </div>
+    </div>
+
+    <div class="sidebar-heading">Core Management</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.visits') }}" class="sidebar-link active">
+          <i class="bi bi-calendar4-event"></i>
+          <span>Industrial Visits</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.registrations') }}" class="sidebar-link">
+          <i class="bi bi-card-checklist"></i>
+          <span>Registrations</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.students') }}" class="sidebar-link">
+          <i class="bi bi-people"></i>
+          <span>Enrolled Students</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.payments') }}" class="sidebar-link">
+          <i class="bi bi-credit-card"></i>
+          <span>Payments Ledger</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.reports') }}" class="sidebar-link">
+          <i class="bi bi-bar-chart-line"></i>
+          <span>Reports & Analytics</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-heading mt-4">System Actions</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('main.index') }}" class="sidebar-link" target="_blank">
+          <i class="bi bi-box-arrow-up-right"></i>
+          <span>View Public Site</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('auth.logout') }}" class="sidebar-link text-danger">
+          <i class="bi bi-box-arrow-right text-danger"></i>
+          <span>Sign Out</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <h2 class="dashboard-title">Industrial Visit Management</h2>
+        <p class="dashboard-subtitle">Create, publish, modify, and monitor capacity for all organized plant tours.</p>
+      </div>
+      <a href="{{ url_for('admin.create_visit') }}" class="btn btn-primary" id="btn-create-visit-page">
+        <i class="bi bi-plus-lg me-1"></i> Create Industrial Visit
+      </a>
+    </div>
+
+    <!-- Status Filters -->
+    <ul class="nav nav-pills mb-4">
+      <li class="nav-item">
+        <a class="nav-link {% if active_status == 'all' %}active{% endif %}" href="{{ url_for('admin.visits', status='all') }}">All Statuses</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if active_status == 'published' %}active{% endif %}" href="{{ url_for('admin.visits', status='published') }}">Published</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if active_status == 'draft' %}active{% endif %}" href="{{ url_for('admin.visits', status='draft') }}">Drafts</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if active_status == 'closed' %}active{% endif %}" href="{{ url_for('admin.visits', status='closed') }}">Closed</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if active_status == 'cancelled' %}active{% endif %}" href="{{ url_for('admin.visits', status='cancelled') }}">Cancelled</a>
+      </li>
+    </ul>
+
+    <!-- Visits Table -->
+    <div class="card-table-wrapper">
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Company & Theme</th>
+              <th>Date & Timings</th>
+              <th>Location</th>
+              <th>Capacity & Booked</th>
+              <th>Fee</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if visits %}
+              {% for v in visits %}
+                <tr>
+                  <td><span class="text-muted font-monospace">#{{ v.id }}</span></td>
+                  <td>
+                    <div class="fw-bold text-dark">{{ v.company_name }}</div>
+                    <small class="text-muted">{{ v.title[:30] }}...</small>
+                  </td>
+                  <td>
+                    <div class="fw-semibold">{{ v.visit_date|format_date }}</div>
+                    <small class="text-muted">{{ v.start_time|format_time }}</small>
+                  </td>
+                  <td>
+                    <small class="text-muted">{{ v.location[:25] }}...</small>
+                  </td>
+                  <td>
+                    <div class="d-flex justify-content-between small mb-1">
+                      <strong>{{ v.confirmed_registrations_count }} / {{ v.capacity }}</strong>
+                      <span class="text-muted">{{ v.available_seats }} left</span>
+                    </div>
+                    <div class="capacity-meter" style="width: 110px; margin: 0;">
+                      {% set pct = (v.confirmed_registrations_count / v.capacity * 100)|int if v.capacity > 0 else 0 %}
+                      <div class="capacity-meter-fill {% if pct >= 90 %}danger{% elif pct >= 75 %}warning{% endif %}" style="width: {{ pct }}%;"></div>
+                    </div>
+                  </td>
+                  <td>
+                    <strong class="text-primary">{{ v.fee|format_inr }}</strong>
+                  </td>
+                  <td>
+                    <span class="badge {{ v.status_badge_class }}">{{ v.status|upper }}</span>
+                  </td>
+                  <td class="text-end">
+                    <div class="dropdown d-inline-block">
+                      <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Actions
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                        <li><a class="dropdown-item" href="{{ url_for('main.visit_details', visit_id=v.id) }}" target="_blank"><i class="bi bi-box-arrow-up-right me-2"></i>Preview Public Page</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('admin.edit_visit', visit_id=v.id) }}"><i class="bi bi-pencil me-2"></i>Edit Details</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('admin.registrations', visit_id=v.id) }}"><i class="bi bi-people me-2"></i>View Registrations</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li class="dropdown-header">Change Publication State</li>
+                        {% if v.status != 'published' %}
+                          <li><a class="dropdown-item text-success" href="{{ url_for('admin.update_visit_status', visit_id=v.id, new_status='published') }}"><i class="bi bi-check-circle me-2"></i>Publish Visit</a></li>
+                        {% endif %}
+                        {% if v.status != 'closed' %}
+                          <li><a class="dropdown-item text-secondary" href="{{ url_for('admin.update_visit_status', visit_id=v.id, new_status='closed') }}"><i class="bi bi-lock me-2"></i>Close Registrations</a></li>
+                        {% endif %}
+                        {% if v.status != 'cancelled' %}
+                          <li><a class="dropdown-item text-warning" href="{{ url_for('admin.update_visit_status', visit_id=v.id, new_status='cancelled') }}"><i class="bi bi-x-circle me-2"></i>Cancel Visit</a></li>
+                        {% endif %}
+                        {% if v.confirmed_registrations_count == 0 %}
+                          <li><hr class="dropdown-divider"></li>
+                          <li>
+                            <form method="POST" action="{{ url_for('admin.delete_visit', visit_id=v.id) }}" onsubmit="return confirm('Are you sure you want to permanently delete this visit?');" class="d-inline">
+                              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                              <button type="submit" class="dropdown-item text-danger">
+                                <i class="bi bi-trash me-2"></i>Delete Visit
+                              </button>
+                            </form>
+                          </li>
+                        {% endif %}
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="8" class="text-center py-5 text-muted">
+                  No industrial visits found for the selected filter.
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

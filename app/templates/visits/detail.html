@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}{{ visit.title }} - {{ visit.company_name }}{% endblock %}
+
+{% block content %}
+<!-- Banner / Header -->
+<div class="py-5 bg-white border-bottom">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-8">
+        <nav aria-label="breadcrumb" class="mb-3">
+          <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.visits') }}" class="text-decoration-none">Industrial Visits</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ visit.company_name }}</li>
+          </ol>
+        </nav>
+
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="badge {{ visit.status_badge_class }} px-3 py-2 fs-6">
+            {{ visit.dynamic_status }}
+          </span>
+          <span class="badge bg-light text-dark border px-3 py-2 fs-6">
+            <i class="bi bi-mortarboard me-1 text-primary"></i> {{ visit.eligibility_departments }}
+          </span>
+        </div>
+
+        <h1 class="fw-bold mb-2">{{ visit.title }}</h1>
+        <h5 class="text-primary fw-bold mb-3"><i class="bi bi-building me-2"></i>{{ visit.company_name }}</h5>
+        
+        <p class="text-muted leading-relaxed mb-0">{{ visit.description }}</p>
+      </div>
+
+      <div class="col-lg-4">
+        <!-- Quick Action Booking Card -->
+        <div class="card border-0 shadow-md rounded-4 p-4 bg-light">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted small">Registration Fee</span>
+            <span class="fs-3 fw-bold text-primary">{{ visit.fee|format_inr }}</span>
+          </div>
+
+          <div class="mb-3 pb-3 border-bottom">
+            <div class="d-flex justify-content-between text-muted small mb-1">
+              <span>Seat Availability:</span>
+              <strong class="text-dark">{{ visit.available_seats }} / {{ visit.capacity }} Available</strong>
+            </div>
+            <div class="capacity-meter">
+              {% set pct = (visit.confirmed_registrations_count / visit.capacity * 100)|int if visit.capacity > 0 else 0 %}
+              <div class="capacity-meter-fill {% if pct >= 90 %}danger{% elif pct >= 75 %}warning{% endif %}" style="width: {{ pct }}%;"></div>
+            </div>
+          </div>
+
+          <div class="mb-3 small">
+            <div class="d-flex align-items-center gap-2 text-muted mb-2">
+              <i class="bi bi-calendar-event text-primary"></i>
+              <span><strong>Date:</strong> {{ visit.visit_date|format_date }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 text-muted mb-2">
+              <i class="bi bi-clock text-primary"></i>
+              <span><strong>Time:</strong> {{ visit.start_time|format_time }} – {{ visit.end_time|format_time }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 text-muted">
+              <i class="bi bi-hourglass-bottom text-danger"></i>
+              <span><strong>Deadline:</strong> {{ visit.registration_deadline|format_date('%d %b %Y, %I:%M %p') }}</span>
+            </div>
+          </div>
+
+          <!-- CTA / Registration Button Logic -->
+          {% if user_registered %}
+            <div class="alert alert-success d-flex align-items-center gap-2 p-2 small mb-3">
+              <i class="bi bi-check-circle-fill fs-5"></i>
+              <span>You are already registered for this industrial tour!</span>
+            </div>
+            <a href="{{ url_for('student.registrations') }}" class="btn btn-success w-100 py-2 fw-bold" id="btn-view-my-reg">
+              <i class="bi bi-ticket-perforated me-1"></i> View My Registration
+            </a>
+          {% elif not can_register %}
+            <div class="alert alert-warning p-2 small mb-3">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ eligibility_message }}
+            </div>
+            <button class="btn btn-secondary w-100 py-2 fw-bold" disabled id="btn-register-disabled">
+              Registration Unavailable
+            </button>
+          {% elif current_user.is_authenticated and current_user.is_student %}
+            <a href="{{ url_for('student.register_visit', visit_id=visit.id) }}" class="btn btn-primary w-100 py-2 fw-bold fs-5 shadow" id="btn-register-now">
+              <i class="bi bi-pencil-square me-2"></i> Register Now
+            </a>
+          {% elif current_user.is_authenticated and current_user.is_admin %}
+            <a href="{{ url_for('admin.edit_visit', visit_id=visit.id) }}" class="btn btn-navy w-100 py-2 fw-bold" id="btn-admin-edit">
+              <i class="bi bi-pencil me-1"></i> Edit Industrial Visit (Admin)
+            </a>
+          {% else %}
+            <a href="{{ url_for('auth.login', next=request.url) }}" class="btn btn-primary w-100 py-2 fw-bold" id="btn-login-to-register">
+              <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Register
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detailed Body: Schedule, Experience & Logistics -->
+<div class="py-5 bg-light">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <!-- Cover Banner Image -->
+        {% if visit.cover_image %}
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+            <img src="{{ visit.cover_image }}" alt="{{ visit.title }}" class="img-fluid" style="max-height: 400px; width: 100%; object-fit: cover;">
+          </div>
+        {% endif %}
+
+        <!-- Visit Schedule Timeline -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <h4 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-2"></i>Official Visit Itinerary</h4>
+          <p class="text-muted small">Please adhere strictly to the schedule. Departure buses will leave on time.</p>
+
+          <div class="timeline">
+            {% if visit.parsed_schedule %}
+              {% for step in visit.parsed_schedule %}
+                <div class="timeline-item">
+                  <div class="timeline-time">{{ step.time }}</div>
+                  <div class="timeline-title">{{ step.activity }}</div>
+                  {% if step.description %}
+                    <p class="timeline-desc">{{ step.description }}</p>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="timeline-item">
+                <div class="timeline-time">{{ visit.start_time|format_time }}</div>
+                <div class="timeline-title">Assembly & Departure</div>
+                <p class="timeline-desc">Assembly at {{ visit.meeting_point }} and departure to {{ visit.company_name }}.</p>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-time">Mid-Day</div>
+                <div class="timeline-title">Plant Tour & Expert Session</div>
+                <p class="timeline-desc">Guided walkthrough of production corridors and Q&A with engineering heads.</p>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-time">{{ visit.end_time|format_time }}</div>
+                <div class="timeline-title">Return to Campus</div>
+                <p class="timeline-desc">Arrival back at college main campus.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- What You'll Experience -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <h4 class="fw-bold mb-3"><i class="bi bi-stars text-primary me-2"></i>What You'll Experience</h4>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="d-flex align-items-start gap-3 p-3 bg-light rounded-3">
+                <i class="bi bi-tools text-primary fs-4"></i>
+                <div>
+                  <h6 class="fw-bold mb-1">Live Plant Tour</h6>
+                  <small class="text-muted">Witness automated manufacturing, precision machinery, and production lines.</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex align-items-start gap-3 p-3 bg-light rounded-3">
+                <i class="bi bi-cpu text-primary fs-4"></i>
+                <div>
+                  <h6 class="fw-bold mb-1">Technical Demonstrations</h6>
+                  <small class="text-muted">Observe enterprise software testing, IoT telemetry, and robotics operations.</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex align-items-start gap-3 p-3 bg-light rounded-3">
+                <i class="bi bi-people text-primary fs-4"></i>
+                <div>
+                  <h6 class="fw-bold mb-1">Expert Interaction</h6>
+                  <small class="text-muted">Direct dialogues with Senior Engineers, Project Managers, and R&D Scientists.</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex align-items-start gap-3 p-3 bg-light rounded-3">
+                <i class="bi bi-briefcase text-primary fs-4"></i>
+                <div>
+                  <h6 class="fw-bold mb-1">Career & Internship Insights</h6>
+                  <small class="text-muted">Learn about industry recruiting expectations, certifications, and PPO pathways.</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Important Instructions -->
+        {% if visit.important_instructions %}
+          <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h4 class="fw-bold mb-3"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Important Instructions & Safety Norms</h4>
+            <div class="bg-light p-3 rounded-3 text-dark small" style="white-space: pre-line;">
+              {{ visit.important_instructions }}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Right Column: Location, Assembly & Eligibility -->
+      <div class="col-lg-4">
+        <!-- Location & Assembly Details -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill text-primary me-2"></i>Logistics & Venue</h5>
+
+          <div class="mb-3">
+            <label class="text-muted small fw-bold text-uppercase">Facility Address</label>
+            <p class="mb-0 fw-semibold text-dark">{{ visit.location }}</p>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-muted small fw-bold text-uppercase">Assembly & Boarding Point</label>
+            <p class="mb-0 fw-semibold text-dark">{{ visit.meeting_point }}</p>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-muted small fw-bold text-uppercase">Reporting Time</label>
+            <p class="mb-0 fw-semibold text-dark">{{ visit.start_time|format_time }} sharp</p>
+          </div>
+
+          <div class="mb-0">
+            <label class="text-muted small fw-bold text-uppercase">Transportation</label>
+            <p class="mb-0 fw-semibold text-dark">College AC Express Transit Bus</p>
+          </div>
+        </div>
+
+        <!-- Eligibility Criteria -->
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+          <h5 class="fw-bold mb-3"><i class="bi bi-check2-circle text-primary me-2"></i>Eligibility Criteria</h5>
+
+          <div class="mb-3">
+            <label class="text-muted small fw-bold text-uppercase">Eligible Departments</label>
+            <p class="mb-0 fw-semibold text-dark">{{ visit.eligibility_departments }}</p>
+          </div>
+
+          <div class="mb-0">
+            <label class="text-muted small fw-bold text-uppercase">Eligible Academic Years</label>
+            <p class="mb-0 fw-semibold text-dark">{{ visit.eligibility_years }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

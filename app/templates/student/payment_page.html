@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Complete Payment for {{ visit.company_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <!-- Stepper -->
+      <div class="stepper mb-5">
+        <div class="step-item completed">
+          <div class="step-circle"><i class="bi bi-check-lg"></i></div>
+          <div class="step-label">Student Details</div>
+        </div>
+        <div class="step-item completed">
+          <div class="step-circle"><i class="bi bi-check-lg"></i></div>
+          <div class="step-label">Emergency Info</div>
+        </div>
+        <div class="step-item active">
+          <div class="step-circle">3</div>
+          <div class="step-label">Payment & Confirmation</div>
+        </div>
+      </div>
+
+      <!-- Payment Summary Card -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white mb-4">
+        <div class="text-center mb-4">
+          <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm" style="width: 56px; height: 56px;">
+            <i class="bi bi-credit-card-2-front fs-4"></i>
+          </div>
+          <h3 class="fw-bold mb-1">Registration Payment</h3>
+          <p class="text-muted small">Registration ID: <strong class="text-dark font-monospace">{{ registration.registration_id }}</strong></p>
+        </div>
+
+        <!-- Invoice Breakdown Table -->
+        <div class="p-3 bg-light rounded-3 mb-4 border">
+          <h6 class="fw-bold mb-3 border-bottom pb-2">Order Summary</h6>
+          <div class="d-flex justify-content-between text-muted small mb-2">
+            <span>Visit: {{ visit.title }}</span>
+            <strong class="text-dark">{{ visit.fee|format_inr }}</strong>
+          </div>
+          <div class="d-flex justify-content-between text-muted small mb-2">
+            <span>Company: {{ visit.company_name }}</span>
+            <span class="text-dark">{{ visit.visit_date|format_date }}</span>
+          </div>
+          <div class="d-flex justify-content-between text-muted small mb-2">
+            <span>Student: {{ current_user.full_name }} ({{ current_user.roll_number }})</span>
+            <span class="text-dark">{{ current_user.department }}</span>
+          </div>
+          <div class="d-flex justify-content-between text-muted small mb-3">
+            <span>Platform & Processing Fee</span>
+            <span class="text-success fw-bold">₹0.00 (Waived)</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+            <span class="fw-bold text-dark fs-5">Total Amount</span>
+            <span class="fw-bold text-primary fs-3">{{ visit.fee|format_inr }}</span>
+          </div>
+        </div>
+
+        {% if is_mock %}
+          <!-- Development Mock Payment Gateway Interface -->
+          <div class="card border-warning border-2 rounded-3 bg-light p-4 mb-4">
+            <div class="d-flex align-items-center gap-2 text-warning mb-2">
+              <i class="bi bi-tools fs-4"></i>
+              <h5 class="fw-bold text-dark mb-0">Development / Mock Payment Gateway</h5>
+            </div>
+            <p class="text-muted small mb-3">
+              Razorpay production credentials are not configured in environment. The portal is running in simulated test mode to verify application flows.
+            </p>
+
+            <form method="POST" action="{{ url_for('payment.mock_process') }}" id="mock-payment-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="registration_id" value="{{ registration.id }}">
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold small">Simulate Payment Method</label>
+                <select name="payment_method" class="form-select small">
+                  <option value="DevMock UPI (GooglePay/PhonePe)">DevMock UPI (Instant Simulation)</option>
+                  <option value="DevMock NetBanking (HDFC/SBI)">DevMock NetBanking</option>
+                  <option value="DevMock Debit/Credit Card">DevMock Visa/MasterCard</option>
+                </select>
+              </div>
+
+              <div class="row g-2">
+                <div class="col-sm-6">
+                  <button type="submit" name="simulate_status" value="success" class="btn btn-success w-100 py-2 fw-bold" id="btn-mock-pay-success">
+                    <i class="bi bi-check-circle me-1"></i> Simulate Payment Success
+                  </button>
+                </div>
+                <div class="col-sm-6">
+                  <button type="submit" name="simulate_status" value="failure" class="btn btn-outline-danger w-100 py-2 fw-bold" id="btn-mock-pay-fail">
+                    <i class="bi bi-x-circle me-1"></i> Simulate Payment Failure
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        {% else %}
+          <!-- Live / Test Razorpay Button -->
+          <div class="text-center">
+            <button type="button" class="btn btn-primary btn-lg w-100 py-3 fw-bold shadow mb-3" id="btn-razorpay-pay" onclick="launchRazorpay()">
+              <i class="bi bi-lock-fill me-2"></i> Pay {{ visit.fee|format_inr }} with Razorpay
+            </button>
+            <div class="text-muted small">
+              <i class="bi bi-shield-lock-fill text-success me-1"></i> Secured with 256-bit SSL encryption & server-side verification
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="text-center mt-3 pt-3 border-top">
+          <a href="{{ url_for('student.registrations') }}" class="small text-muted text-decoration-none">
+            <i class="bi bi-arrow-left me-1"></i> Cancel and Return to My Registrations
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if not is_mock %}
+<script>
+function launchRazorpay() {
+  initiateRazorpayPayment({
+    key_id: "{{ razorpay_key_id }}",
+    amount_paise: {{ amount_paise }},
+    currency: "INR",
+    college_name: "{{ college_name }}",
+    description: "Industrial Visit Fee - {{ visit.company_name }}",
+    logo_url: "{{ visit.company_logo }}",
+    order_id: "{{ razorpay_order.id if razorpay_order else '' }}",
+    registration_id: "{{ registration.id }}",
+    verify_url: "{{ url_for('payment.verify') }}",
+    csrf_token: "{{ csrf_token() }}",
+    student_name: "{{ current_user.full_name }}",
+    student_email: "{{ current_user.email }}",
+    student_phone: "{{ current_user.phone }}",
+    student_roll: "{{ current_user.roll_number }}"
+  });
+}
+</script>
+{% endif %}
+{% endblock %}

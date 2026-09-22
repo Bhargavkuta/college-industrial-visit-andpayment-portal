@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Official Receipt - {{ registration.registration_id }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Actions Bar (Hidden on print) -->
+  <div class="d-flex justify-content-between align-items-center mb-4 no-print" style="max-width: 800px; margin: 0 auto;">
+    <a href="{{ url_for('student.registrations') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i> Back to Registrations
+    </a>
+    <button onclick="window.print()" class="btn btn-primary fw-bold" id="btn-print-action">
+      <i class="bi bi-printer-fill me-2"></i> Print / Save as PDF
+    </button>
+  </div>
+
+  <!-- Printable Receipt Document -->
+  <div class="receipt-wrapper">
+    <!-- College Header -->
+    <div class="receipt-header">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-2 px-2 py-1 fs-5 fw-bold">
+            <i class="bi bi-buildings"></i>
+          </span>
+          <h4 class="fw-bold mb-0 text-dark">{{ college_name }}</h4>
+        </div>
+        <p class="text-muted small mb-0">Industry-Academia Relations Cell (IARC) &bull; Official Registration Voucher</p>
+      </div>
+      <div class="text-end">
+        <div class="receipt-stamp">CONFIRMED</div>
+      </div>
+    </div>
+
+    <!-- Voucher Top Meta Grid -->
+    <div class="row g-3 mb-4 pb-3 border-bottom small">
+      <div class="col-sm-6">
+        <span class="text-muted d-block">Registration Voucher ID:</span>
+        <strong class="fs-5 font-monospace text-primary">{{ registration.registration_id }}</strong>
+      </div>
+      <div class="col-sm-6 text-sm-end">
+        <span class="text-muted d-block">Date of Issuance:</span>
+        <strong class="text-dark">{{ registration.registered_at|format_date('%d %B %Y, %I:%M %p') }}</strong>
+      </div>
+    </div>
+
+    <!-- Student Information -->
+    <h6 class="fw-bold text-uppercase text-muted small letter-spacing-1 mb-3">1. Student Details</h6>
+    <div class="p-3 bg-light rounded-3 mb-4 border small">
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <span class="text-muted d-block">Student Full Name</span>
+          <strong class="text-dark fs-6">{{ registration.student.full_name }}</strong>
+        </div>
+        <div class="col-sm-6">
+          <span class="text-muted d-block">Roll Number / Student PRN</span>
+          <strong class="text-dark fs-6">{{ registration.student.roll_number }}</strong>
+        </div>
+        <div class="col-sm-6">
+          <span class="text-muted d-block">Department & Academic Year</span>
+          <span class="text-dark">{{ registration.student.department }} &bull; {{ registration.student.year }} (Div {{ registration.student.division }})</span>
+        </div>
+        <div class="col-sm-6">
+          <span class="text-muted d-block">Contact & College Email</span>
+          <span class="text-dark">{{ registration.student.phone }} &bull; {{ registration.student.email }}</span>
+        </div>
+        <div class="col-sm-12">
+          <span class="text-muted d-block">Emergency Contact</span>
+          <span class="text-dark">{{ registration.emergency_contact }} (Phone: {{ registration.emergency_phone }})</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Industrial Visit Information -->
+    <h6 class="fw-bold text-uppercase text-muted small letter-spacing-1 mb-3">2. Industrial Visit Details</h6>
+    <div class="p-3 bg-light rounded-3 mb-4 border small">
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <span class="text-muted d-block">Host Company / Organization</span>
+          <strong class="text-primary fs-6">{{ registration.visit.company_name }}</strong>
+        </div>
+        <div class="col-sm-6">
+          <span class="text-muted d-block">Visit Theme / Title</span>
+          <strong class="text-dark">{{ registration.visit.title }}</strong>
+        </div>
+        <div class="col-sm-6">
+          <span class="text-muted d-block">Scheduled Visit Date</span>
+          <strong class="text-dark">{{ registration.visit.visit_date|format_date('%A, %d %B %Y') }}</strong>
+        </div>
+        <div class="col-sm-6">
+          <span class="text-muted d-block">Reporting & Return Timings</span>
+          <strong class="text-dark">{{ registration.visit.start_time|format_time }} – {{ registration.visit.end_time|format_time }}</strong>
+        </div>
+        <div class="col-sm-6">
+          <span class="text-muted d-block">Assembly / Boarding Point</span>
+          <span class="text-dark">{{ registration.visit.meeting_point }}</span>
+        </div>
+        <div class="col-sm-6">
+          <span class="text-muted d-block">Industrial Facility Location</span>
+          <span class="text-dark">{{ registration.visit.location }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment & Fee Verification -->
+    <h6 class="fw-bold text-uppercase text-muted small letter-spacing-1 mb-3">3. Payment & Transaction Record</h6>
+    <div class="table-responsive mb-4">
+      <table class="table table-bordered table-sm small">
+        <thead class="bg-light">
+          <tr>
+            <th>Description</th>
+            <th>Payment Method</th>
+            <th>Transaction / Payment ID</th>
+            <th>Status</th>
+            <th class="text-end">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set p = registration.latest_payment %}
+          <tr>
+            <td>Official Industrial Visit Registration Fee</td>
+            <td>{{ p.payment_method if p else 'Complimentary' }}</td>
+            <td class="font-monospace">{{ p.razorpay_payment_id if p and p.razorpay_payment_id else 'RCPT_WAIVER_01' }}</td>
+            <td><span class="badge bg-success">PAID & VERIFIED</span></td>
+            <td class="text-end fw-bold">{{ p.formatted_amount if p else '₹0.00' }}</td>
+          </tr>
+          <tr class="fw-bold">
+            <td colspan="4" class="text-end">Total Amount Paid:</td>
+            <td class="text-end text-primary fs-6">{{ p.formatted_amount if p else '₹0.00' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Important Notice on Receipt -->
+    <div class="border-top pt-3 text-muted" style="font-size: 0.8rem;">
+      <p class="mb-1"><strong>Important Instructions for Boarding:</strong></p>
+      <ul class="mb-2 ps-3">
+        <li>Please carry this printed receipt along with your physical College Identity Card on the day of the visit.</li>
+        <li>Boarding buses depart promptly at {{ registration.visit.start_time|format_time }}. Late reporting cannot be accommodated.</li>
+        <li>Industrial safety footwear is strictly mandatory inside the manufacturing and lab facilities.</li>
+      </ul>
+      <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+        <span>System Generated Electronic Receipt &bull; No Physical Signature Required</span>
+        <span>College IARC Cell Helpline: {{ college_email }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

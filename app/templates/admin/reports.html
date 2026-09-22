@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & Analytics{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+      <div class="bg-navy text-white rounded-circle p-2 d-flex align-items-center justify-content-center bg-primary" style="width: 44px; height: 44px;">
+        <i class="bi bi-shield-lock-fill fs-5"></i>
+      </div>
+      <div>
+        <h6 class="mb-0 fw-bold">Admin Console</h6>
+        <small class="text-muted">{{ college_code }} IARC Cell</small>
+      </div>
+    </div>
+
+    <div class="sidebar-heading">Core Management</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.visits') }}" class="sidebar-link">
+          <i class="bi bi-calendar4-event"></i>
+          <span>Industrial Visits</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.registrations') }}" class="sidebar-link">
+          <i class="bi bi-card-checklist"></i>
+          <span>Registrations</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.students') }}" class="sidebar-link">
+          <i class="bi bi-people"></i>
+          <span>Enrolled Students</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.payments') }}" class="sidebar-link">
+          <i class="bi bi-credit-card"></i>
+          <span>Payments Ledger</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.reports') }}" class="sidebar-link active">
+          <i class="bi bi-bar-chart-line"></i>
+          <span>Reports & Analytics</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-heading mt-4">System Actions</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('main.index') }}" class="sidebar-link" target="_blank">
+          <i class="bi bi-box-arrow-up-right"></i>
+          <span>View Public Site</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('auth.logout') }}" class="sidebar-link text-danger">
+          <i class="bi bi-box-arrow-right text-danger"></i>
+          <span>Sign Out</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="dashboard-content">
+    <div class="dashboard-header no-print">
+      <div>
+        <h2 class="dashboard-title">Reports & Analytics Hub</h2>
+        <p class="dashboard-subtitle">Generate visit-wise attendance summaries, branch participation reports, and revenue analytics.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-outline-secondary">
+          <i class="bi bi-printer me-1"></i> Print Report
+        </button>
+        <a href="{{ url_for('admin.export_registrations_csv') }}" class="btn btn-outline-primary">
+          <i class="bi bi-file-earmark-text me-1"></i> Export CSV
+        </a>
+        <a href="{{ url_for('admin.export_registrations_excel') }}" class="btn btn-success">
+          <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+        </a>
+      </div>
+    </div>
+
+    <!-- Report 1: Visit-Wise Utilization & Revenue -->
+    <div class="card-table-wrapper mb-4">
+      <div class="card-table-header">
+        <h5 class="fw-bold mb-0">1. Industrial Visit Utilization & Revenue Summary</h5>
+        <span class="badge bg-primary">{{ visit_reports|length }} Industrial Visits Tracked</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Company & Theme</th>
+              <th>Visit Date</th>
+              <th>Capacity</th>
+              <th>Confirmed Students</th>
+              <th>Seat Utilization</th>
+              <th>Fee per Student</th>
+              <th>Total Revenue</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if visit_reports %}
+              {% for item in visit_reports %}
+                <tr>
+                  <td>
+                    <div class="fw-bold text-dark">{{ item.visit.company_name }}</div>
+                    <small class="text-muted">{{ item.visit.title[:35] }}...</small>
+                  </td>
+                  <td>{{ item.visit.visit_date|format_date }}</td>
+                  <td>{{ item.capacity }}</td>
+                  <td><strong>{{ item.confirmed_count }}</strong></td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="capacity-meter flex-grow-1" style="width: 80px; margin: 0;">
+                        <div class="capacity-meter-fill {% if item.utilization >= 90 %}danger{% elif item.utilization >= 75 %}warning{% endif %}" style="width: {{ item.utilization }}%;"></div>
+                      </div>
+                      <span class="small fw-bold">{{ item.utilization }}%</span>
+                    </div>
+                  </td>
+                  <td>{{ item.visit.fee|format_inr }}</td>
+                  <td><strong class="text-success">{{ item.revenue|format_inr }}</strong></td>
+                  <td>
+                    <span class="badge {{ item.visit.status_badge_class }}">{{ item.visit.status|upper }}</span>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="8" class="text-center py-4 text-muted">No visits recorded.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Report 2: Department-Wise Participation Breakdown -->
+    <div class="card-table-wrapper mb-4">
+      <div class="card-table-header">
+        <h5 class="fw-bold mb-0">2. Department-Wise Student Participation Breakdown</h5>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Department / Branch</th>
+              <th>Confirmed Registrations</th>
+              <th>Total Revenue Generated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if dept_breakdown %}
+              {% for dept, count, rev in dept_breakdown %}
+                <tr>
+                  <td><strong class="text-dark">{{ dept }}</strong></td>
+                  <td><span class="badge bg-primary fs-6">{{ count }} Student{% if count != 1 %}s{% endif %}</span></td>
+                  <td><strong class="text-success">{{ rev|format_inr if rev else '₹0.00' }}</strong></td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="3" class="text-center py-4 text-muted">No confirmed registrations across branches yet.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

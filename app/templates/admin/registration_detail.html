@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Registration {{ registration.registration_id }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="dashboard-sidebar">
+    <div class="d-flex align-items-center gap-2 mb-4 px-2">
+      <div class="bg-navy text-white rounded-circle p-2 d-flex align-items-center justify-content-center bg-primary" style="width: 44px; height: 44px;">
+        <i class="bi bi-shield-lock-fill fs-5"></i>
+      </div>
+      <div>
+        <h6 class="mb-0 fw-bold">Admin Console</h6>
+        <small class="text-muted">{{ college_code }} IARC Cell</small>
+      </div>
+    </div>
+
+    <div class="sidebar-heading">Core Management</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link">
+          <i class="bi bi-speedometer2"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.visits') }}" class="sidebar-link">
+          <i class="bi bi-calendar4-event"></i>
+          <span>Industrial Visits</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.registrations') }}" class="sidebar-link active">
+          <i class="bi bi-card-checklist"></i>
+          <span>Registrations</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.students') }}" class="sidebar-link">
+          <i class="bi bi-people"></i>
+          <span>Enrolled Students</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.payments') }}" class="sidebar-link">
+          <i class="bi bi-credit-card"></i>
+          <span>Payments Ledger</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('admin.reports') }}" class="sidebar-link">
+          <i class="bi bi-bar-chart-line"></i>
+          <span>Reports & Analytics</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-heading mt-4">System Actions</div>
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('main.index') }}" class="sidebar-link" target="_blank">
+          <i class="bi bi-box-arrow-up-right"></i>
+          <span>View Public Site</span>
+        </a>
+      </li>
+      <li class="sidebar-nav-item">
+        <a href="{{ url_for('auth.logout') }}" class="sidebar-link text-danger">
+          <i class="bi bi-box-arrow-right text-danger"></i>
+          <span>Sign Out</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="dashboard-content">
+    <div class="dashboard-header">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.registrations') }}">Registrations</a></li>
+            <li class="breadcrumb-item active">{{ registration.registration_id }}</li>
+          </ol>
+        </nav>
+        <h2 class="dashboard-title">Audit Registration: {{ registration.registration_id }}</h2>
+        <p class="dashboard-subtitle">Full transaction audit trail, student profile, and safety details.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('student.receipt', reg_id=registration.id) }}" target="_blank" class="btn btn-outline-primary">
+          <i class="bi bi-printer me-1"></i> Print Official Receipt
+        </a>
+        <a href="{{ url_for('admin.registrations') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left me-1"></i> Back to Ledger
+        </a>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Left Column: Student & Visit Details -->
+      <div class="col-lg-7">
+        <!-- Student Information Card -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+          <h5 class="fw-bold mb-3"><i class="bi bi-person text-primary me-2"></i>Enrolled Student Profile</h5>
+          <div class="row g-3 small">
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Full Name</span>
+              <strong class="text-dark fs-6">{{ registration.student.full_name }}</strong>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Roll Number / Student PRN</span>
+              <strong class="text-dark font-monospace fs-6">{{ registration.student.roll_number }}</strong>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Department</span>
+              <span class="text-dark">{{ registration.student.department }}</span>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Academic Year & Division</span>
+              <span class="text-dark">{{ registration.student.year }} (Div {{ registration.student.division }})</span>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted d-block">College Email</span>
+              <span class="text-dark">{{ registration.student.email }}</span>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Phone Number</span>
+              <span class="text-dark">{{ registration.student.phone }}</span>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Emergency Contact</span>
+              <span class="text-dark">{{ registration.emergency_contact }}</span>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Emergency Phone</span>
+              <span class="text-dark">{{ registration.emergency_phone }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visit Information Card -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+          <h5 class="fw-bold mb-3"><i class="bi bi-building text-primary me-2"></i>Industrial Visit Information</h5>
+          <div class="row g-3 small">
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Company</span>
+              <strong class="text-dark">{{ registration.visit.company_name }}</strong>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Visit Theme</span>
+              <strong class="text-dark">{{ registration.visit.title }}</strong>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Scheduled Date</span>
+              <strong class="text-dark">{{ registration.visit.visit_date|format_date }}</strong>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Reporting Time</span>
+              <strong class="text-dark">{{ registration.visit.start_time|format_time }} – {{ registration.visit.end_time|format_time }}</strong>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Boarding Point</span>
+              <span class="text-dark">{{ registration.visit.meeting_point }}</span>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted d-block">Plant Location</span>
+              <span class="text-dark">{{ registration.visit.location }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Status Controls & Payments Log -->
+      <div class="col-lg-5">
+        <!-- Status Controls Card -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+          <h5 class="fw-bold mb-3">Registration Status</h5>
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <span class="badge {{ registration.status_badge_class }} fs-6 px-3 py-2">
+              {{ registration.status|upper }}
+            </span>
+            <span class="text-muted small">Registered: {{ registration.registered_at|format_date('%d %b %Y, %H:%M') }}</span>
+          </div>
+
+          <label class="form-label fw-semibold small text-muted">Administrative Status Override</label>
+          <div class="d-flex flex-wrap gap-2">
+            {% if registration.status != 'confirmed' %}
+              <a href="{{ url_for('admin.update_registration_status', reg_id=registration.id, new_status='confirmed') }}" class="btn btn-success btn-sm">
+                <i class="bi bi-check-circle me-1"></i> Confirm
+              </a>
+            {% endif %}
+            {% if registration.status != 'pending' %}
+              <a href="{{ url_for('admin.update_registration_status', reg_id=registration.id, new_status='pending') }}" class="btn btn-warning btn-sm">
+                <i class="bi bi-clock me-1"></i> Mark Pending
+              </a>
+            {% endif %}
+            {% if registration.status != 'cancelled' %}
+              <a href="{{ url_for('admin.update_registration_status', reg_id=registration.id, new_status='cancelled') }}" class="btn btn-danger btn-sm">
+                <i class="bi bi-x-circle me-1"></i> Cancel
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Payments Log Card -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+          <h5 class="fw-bold mb-3"><i class="bi bi-credit-card text-primary me-2"></i>Payments Log</h5>
+          {% if registration.payments.count() > 0 %}
+            {% for p in registration.payments %}
+              <div class="p-3 bg-light rounded-3 mb-3 border small">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <strong class="text-dark font-monospace">{{ p.razorpay_payment_id or p.razorpay_order_id or 'N/A' }}</strong>
+                  <span class="badge {{ p.status_badge_class }}">{{ p.status|upper }}</span>
+                </div>
+                <div class="text-muted mb-1">Method: {{ p.payment_method }} &bull; Amount: <strong class="text-primary">{{ p.formatted_amount }}</strong></div>
+                <div class="text-muted" style="font-size: 0.75rem;">Timestamp: {{ p.created_at|format_date('%d %b %Y, %H:%M:%S UTC') }}</div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted small">No payment records exist for this booking.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
