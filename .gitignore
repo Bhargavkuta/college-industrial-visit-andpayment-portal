@@ -48,3 +48,9 @@ coverage.xml
 # OS
 .DS_Store
 Thumbs.db
+
+# Documentation Reports & Generator (Kept Local)
+doc_generator/
+report_render.html
+College_Industrial_Visit_Portal_Technical_Report.pdf
+TECHNICAL_DOCUMENTATION_REPORT.md
